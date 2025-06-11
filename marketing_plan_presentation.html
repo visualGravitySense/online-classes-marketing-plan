@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Маркетинговый план для онлайн-курсов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f8f6f3;
+            color: #2a2a2a;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+        
+        .presentation-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .slide {
+            background: #ffffff;
+            border: 2px solid #e8e5e1;
+            margin: 60px 0;
+            padding: 60px 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+        
+        .slide.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .slide-header {
+            margin-bottom: 50px;
+        }
+        
+        .slide-title {
+            font-size: 2.2em;
+            font-weight: 400;
+            color: #6b6b6b;
+            margin-bottom: 15px;
+            letter-spacing: -0.02em;
+            text-transform: lowercase;
+        }
+        
+        .slide-subtitle {
+            font-size: 1em;
+            color: #a8a8a8;
+            font-weight: 300;
+            font-style: italic;
+        }
+        
+        .hero-slide {
+            text-align: left;
+            padding: 100px 40px;
+            background: #fdfcfb;
+            border: 3px solid #d4c5b9;
+        }
+        
+        .hero-title {
+            font-size: 4em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: #7a7a7a;
+            letter-spacing: -0.03em;
+            text-transform: lowercase;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3em;
+            color: #b5b5b5;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .course-card {
+            background: #ffffff;
+            border: 2px solid transparent;
+            padding: 40px 30px;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .course-card:hover {
+            border-color: #d4c5b9;
+        }
+        
+        .course-card:nth-child(1) {
+            background: #f7f3f0;
+            border-color: #e8ddd6;
+        }
+        
+        .course-card:nth-child(2) {
+            background: #f0f5f3;
+            border-color: #d6e8e0;
+        }
+        
+        .course-card:nth-child(3) {
+            background: #f3f0f7;
+            border-color: #e0d6e8;
+        }
+        
+        .course-card:nth-child(4) {
+            background: #f0f3f7;
+            border-color: #d6e0e8;
+        }
+        
+        .course-title {
+            font-size: 1.4em;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #5a5a5a;
+            text-transform: lowercase;
+        }
+        
+        .course-details {
+            font-size: 0.9em;
+            color: #8a8a8a;
+            line-height: 1.6;
+        }
+        
+        .course-details p {
+            margin-bottom: 10px;
+        }
+        
+        .price {
+            font-size: 1.1em;
+            font-weight: 400;
+            margin-top: 25px;
+            padding: 15px 20px;
+            background: #f8f8f8;
+            border: 1px solid #e5e5e5;
+            color: #666;
+        }
+        
+        .strategy-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .week-card {
+            display: flex;
+            align-items: flex-start;
+            background: #fafafa;
+            padding: 30px;
+            border-left: 4px solid #c9c9c9;
+            transition: border-left-color 0.3s ease;
+        }
+        
+        .week-card:hover {
+            border-left-color: #a8a8a8;
+        }
+        
+        .week-number {
+            font-size: 3em;
+            font-weight: 300;
+            color: #b5b5b5;
+            margin-right: 30px;
+            min-width: 80px;
+            line-height: 0.8;
+        }
+        
+        .week-content h4 {
+            color: #5a5a5a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 400;
+            text-transform: lowercase;
+        }
+        
+        .week-tasks {
+            list-style: none;
+            color: #7a7a7a;
+        }
+        
+        .week-tasks li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.95em;
+        }
+        
+        .week-tasks li:before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: #b5b5b5;
+        }
+        
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin: 40px 0;
+        }
+        
+        .channel-section {
+            background: #fafafa;
+            padding: 40px;
+            border: 2px solid #f0f0f0;
+            position: relative;
+        }
+        
+        .channel-section:nth-child(1) {
+            background: #f7f5f3;
+            border-color: #ebe7e3;
+        }
+        
+        .channel-section:nth-child(2) {
+            background: #f3f5f7;
+            border-color: #e3e7eb;
+        }
+        
+        .channel-section h3 {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            color: #5a5a5a;
+            font-weight: 400;
+            text-transform: lowercase;
+        }
+        
+        .channel-list {
+            list-style: none;
+        }
+        
+        .channel-list li {
+            margin: 15px 0;
+            padding: 15px 0;
+            color: #7a7a7a;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 0.95em;
+        }
+        
+        .channel-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .channel-list strong {
+            color: #5a5a5a;
+            font-weight: 400;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .metric-card {
+            background: #fafafa;
+            padding: 30px;
+            border: 2px solid #f0f0f0;
+            transition: border-color 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            border-color: #e0e0e0;
+        }
+        
+        .metric-card:nth-child(1) { 
+            background: #f7f5f3; 
+            border-color: #ebe7e3; 
+        }
+        .metric-card:nth-child(2) { 
+            background: #f5f7f3; 
+            border-color: #e7ebe3; 
+        }
+        .metric-card:nth-child(3) { 
+            background: #f3f5f7; 
+            border-color: #e3e7eb; 
+        }
+        .metric-card:nth-child(4) { 
+            background: #f7f3f5; 
+            border-color: #ebe3e7; 
+        }
+        
+        .metric-title {
+            font-size: 1.1em;
+            font-weight: 400;
+            color: #5a5a5a;
+            margin-bottom: 20px;
+            text-transform: lowercase;
+        }
+        
+        .metric-list {
+            list-style: none;
+            color: #7a7a7a;
+        }
+        
+        .metric-list li {
+            margin: 12px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 0.9em;
+        }
+        
+        .metric-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .cta-section {
+            padding: 60px;
+            background: #f5f5f5;
+            border: 3px solid #e0e0e0;
+            margin: 60px 0;
+        }
+        
+        .cta-title {
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            color: #6b6b6b;
+            font-weight: 300;
+            text-transform: lowercase;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.1em;
+            color: #8a8a8a;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        
+        .quick-wins {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .win-card {
+            background: #fafafa;
+            padding: 30px;
+            border: 2px solid #f0f0f0;
+            transition: border-color 0.3s ease;
+        }
+        
+        .win-card:hover {
+            border-color: #e0e0e0;
+        }
+        
+        .win-card:nth-child(odd) {
+            background: #f7f5f3;
+            border-color: #ebe7e3;
+        }
+        
+        .win-number {
+            font-size: 2em;
+            font-weight: 300;
+            margin-bottom: 15px;
+            color: #b5b5b5;
+        }
+        
+        .win-card div:last-child {
+            color: #6b6b6b;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .win-card strong {
+            font-weight: 400;
+            color: #5a5a5a;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #f0f0f0;
+            z-index: 1000;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #b5b5b5;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.8em;
+            }
+            
+            .slide-title {
+                font-size: 1.8em;
+            }
+            
+            .slide {
+                padding: 40px 20px;
+                margin: 40px 0;
+            }
+            
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .week-card {
+                flex-direction: column;
+            }
+            
+            .week-number {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .channels-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Anti-design specific styles */
+        h1, h2, h3, h4 {
+            font-weight: 300;
+        }
+        
+        strong {
+            font-weight: 400;
+        }
+        
+        .slide:nth-child(odd) {
+            background: #fdfcfb;
+        }
+        
+        /* Minimal emoji styling */
+        .slide-title::before,
+        .hero-title::before,
+        .cta-title::before {
+            margin-right: 15px;
+            font-size: 0.8em;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+    
+    <div class="presentation-container">
+        <!-- Hero Slide -->
+        <div class="slide hero-slide visible">
+            <h1 class="hero-title">маркетинговый план</h1>
+            <p class="hero-subtitle">стратегия запуска онлайн-курсов</p>
+            <div style="margin-top: 50px; font-size: 1em; color: #8a8a8a; font-weight: 300;">
+                <p>комплексный план продвижения курсов по ux/ui design, 3d design, 3d printing и frontend development</p>
+            </div>
+        </div>
+
+        <!-- Positioning Slide -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">позиционирование курсов</h2>
+                <p class="slide-subtitle">четкое позиционирование для каждого направления</p>
+            </div>
+            
+            <div class="course-grid">
+                <div class="course-card">
+                    <div class="course-title">ux/ui design</div>
+                    <div class="course-details">
+                        <p><strong>аудитория:</strong> дизайнеры, студенты, карьеристы</p>
+                        <p><strong>утп:</strong> "от нуля до портфолио за 8 недель"</p>
+                    </div>
+                    <div class="price">€299-499</div>
+                </div>
+                
+                <div class="course-card">
+                    <div class="course-title">3d design & games</div>
+                    <div class="course-details">
+                        <p><strong>аудитория:</strong> геймеры, 3d-художники, студенты</p>
+                        <p><strong>утп:</strong> "создай свою первую игру за 10 недель"</p>
+                    </div>
+                    <div class="price">€399-599</div>
+                </div>
+                
+                <div class="course-card">
+                    <div class="course-title">3d printing</div>
+                    <div class="course-details">
+                        <p><strong>аудитория:</strong> инженеры, хоббисты, предприниматели</p>
+                        <p><strong>утп:</strong> "от идеи до готового продукта"</p>
+                    </div>
+                    <div class="price">€199-299</div>
+                </div>
+                
+                <div class="course-card">
+                    <div class="course-title">frontend development</div>
+                    <div class="course-details">
+                        <p><strong>аудитория:</strong> программисты, карьеристы, студенты</p>
+                        <p><strong>утп:</strong> "стань react/vue/angular разработчиком за 12 недель"</p>
+                    </div>
+                    <div class="price">€399-699</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategy Slide -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">стратегия быстрого запуска</h2>
+                <p class="slide-subtitle">30 дней до первых продаж</p>
+            </div>
+            
+            <div class="strategy-timeline">
+                <div class="week-card">
+                    <div class="week-number">1</div>
+                    <div class="week-content">
+                        <h4>подготовка фундамента</h4>
+                        <ul class="week-tasks">
+                            <li>создание лендингов для каждого курса</li>
+                            <li>настройка системы приема платежей</li>
+                            <li>подготовка бесплатного контента (lead magnets)</li>
+                            <li>создание telegram/discord сообществ</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="week-card">
+                    <div class="week-number">2</div>
+                    <div class="week-content">
+                        <h4>контент-маркетинг</h4>
+                        <ul class="week-tasks">
+                            <li>запуск youtube канала с mini-уроками</li>
+                            <li>создание instagram/tiktok с процессом создания</li>
+                            <li>публикация кейсов в linkedin</li>
+                            <li>написание статей на medium/habr</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="week-card">
+                    <div class="week-number">3</div>
+                    <div class="week-content">
+                        <h4>влияние и партнерства</h4>
+                        <ul class="week-tasks">
+                            <li>поиск микро-инфлюенсеров в нише</li>
+                            <li>партнерство с it-школами</li>
+                            <li>гостевые выступления на подкастах</li>
+                            <li>сотрудничество с коворкингами</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="week-card">
+                    <div class="week-number">4</div>
+                    <div class="week-content">
+                        <h4>рекламный запуск</h4>
+                        <ul class="week-tasks">
+                            <li>таргетированная реклама в соцсетях</li>
+                            <li>google ads по ключевым запросам</li>
+                            <li>ретаргетинг на посетителей сайта</li>
+                            <li>email-маркетинг кампании</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channels Slide -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">каналы продвижения</h2>
+                <p class="slide-subtitle">оптимальный микс бесплатных и платных каналов</p>
+            </div>
+            
+            <div class="channels-grid">
+                <div class="channel-section">
+                    <h3>бесплатные каналы</h3>
+                    <ul class="channel-list">
+                        <li><strong>youtube</strong> — туториалы, кейсы, интервью</li>
+                        <li><strong>instagram/tiktok</strong> — процесс работы, результаты</li>
+                        <li><strong>linkedin</strong> — экспертные статьи, нетворкинг</li>
+                        <li><strong>telegram</strong> — сообщество, полезный контент</li>
+                        <li><strong>habr/medium</strong> — технические статьи</li>
+                        <li><strong>discord</strong> — живое сообщество студентов</li>
+                    </ul>
+                </div>
+                
+                <div class="channel-section">
+                    <h3>платные каналы</h3>
+                    <ul class="channel-list">
+                        <li><strong>facebook/instagram ads</strong> — €50-100/день</li>
+                        <li><strong>google ads</strong> — €30-50/день</li>
+                        <li><strong>youtube ads</strong> — €20-40/день</li>
+                        <li><strong>influencer marketing</strong> — €500-1000/месяц</li>
+                        <li><strong>sponsored posts</strong> — €200-500/пост</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Slide -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">kpi и метрики</h2>
+                <p class="slide-subtitle">ключевые показатели для отслеживания успеха</p>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">трафик</div>
+                    <ul class="metric-list">
+                        <li>уникальные посетители сайта</li>
+                        <li>время на сайте</li>
+                        <li>показатель отказов</li>
+                        <li>источники трафика</li>
+                    </ul>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-title">конверсия</div>
+                    <ul class="metric-list">
+                        <li>conversion rate (посетитель → лид)</li>
+                        <li>cost per lead</li>
+                        <li>conversion rate (лид → покупка)</li>
+                        <li>lifetime value студента</li>
+                    </ul>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-title">вовлеченность</div>
+                    <ul class="metric-list">
+                        <li>email open rate (цель: >25%)</li>
+                        <li>click-through rate (цель: >5%)</li>
+                        <li>social media engagement</li>
+                        <li>комментарии и шеры</li>
+                    </ul>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-title">продажи</div>
+                    <ul class="metric-list">
+                        <li>количество новых студентов</li>
+                        <li>средний чек</li>
+                        <li>revenue per студент</li>
+                        <li>retention rate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Wins Slide -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">быстрые wins</h2>
+                <p class="slide-subtitle">первые 7 дней - максимальный результат</p>
+            </div>
+            
+            <div class="quick-wins">
+                <div class="win-card">
+                    <div class="win-number">1</div>
+                    <div><strong>создать простые лендинги</strong> — используй конструкторы</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">2</div>
+                    <div><strong>запустить facebook/instagram группы</strong> — начни собирать аудиторию</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">3</div>
+                    <div><strong>сделать 3-5 бесплатных уроков</strong> — покажи качество</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">4</div>
+                    <div><strong>настроить lead magnets</strong> — собирай email-адреса</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">5</div>
+                    <div><strong>связаться с 10 потенциальными студентами</strong> — прямые продажи</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">6</div>
+                    <div><strong>создать партнерство</strong> — найди 2-3 смежных бизнеса</div>
+                </div>
+                
+                <div class="win-card">
+                    <div class="win-number">7</div>
+                    <div><strong>запустить первую рекламную кампанию</strong> — небольшой бюджет для теста</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Slide -->
+        <div class="slide">
+            <div class="cta-section">
+                <h2 class="cta-title">время действовать</h2>
+                <p class="cta-subtitle">начни реализацию плана уже сегодня</p>
+                <div style="margin-top: 40px; font-size: 1em; color: #7a7a7a;">
+                    <p><strong>первые 10 студентов</strong> → создать кейсы успехов</p>
+                    <p><strong>первые 50 студентов</strong> → запустить affiliate программу</p>
+                    <p><strong>масштабирование</strong> → корпоративные продажи и продвинутые курсы</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Progress bar functionality
+        function updateProgressBar() {
+            const slides = document.querySelectorAll('.slide');
+            const progressFill = document.getElementById('progressFill');
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            progressFill.style.width = scrollPercent + '%';
+        }
+
+        // Animate slides on scroll
+        function animateOnScroll() {
+            const slides = document.querySelectorAll('.slide');
+            const windowHeight = window.innerHeight;
+            
+            slides.forEach(slide => {
+                const slideTop = slide.offsetTop;
+                const slideHeight = slide.offsetHeight;
+                const scrollTop = window.pageYOffset;
+                
+                if (scrollTop + windowHeight > slideTop + 100) {
+                    slide.classList.add('visible');
+                }
+            });
+        }
+
+        // Minimal interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            animateOnScroll();
+        });
+
+        // Event listeners
+        window.addEventListener('scroll', function() {
+            updateProgressBar();
+            animateOnScroll();
+        });
+
+        window.addEventListener('resize', function() {
+            updateProgressBar();
+        });
+    </script>
+</body>
+</html>
