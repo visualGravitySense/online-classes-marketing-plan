@@ -469,45 +469,46 @@
     </div>
 
     <script>
-        // Данные в памяти
+        const API_BASE_URL = 'http://localhost:8000/api';
         let channels = [];
         let posts = [];
         let currentEditingChannel = null;
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            loadSampleData();
+            loadChannels();
+            loadPosts();
             setupEventListeners();
             updateUI();
             setDefaultDateTime();
         });
 
-        function loadSampleData() {
-            // Загружаем тестовые данные
-            channels = [
-                { id: 1, name: 'Мой канал', channelId: '@mychannel', type: 'channel', active: true },
-                { id: 2, name: 'Тестовая группа', channelId: '-1001234567890', type: 'group', active: true },
-                { id: 3, name: 'Новостной канал', channelId: '@news_channel', type: 'channel', active: false }
-            ];
+        async function loadChannels() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/channels`);
+                channels = await response.json();
+                updateUI();
+            } catch (error) {
+                showNotification('Ошибка загрузки каналов: ' + error);
+            }
+        }
 
-            posts = [
-                {
-                    id: 1,
-                    content: 'Привет! Это тестовый пост для автоматической публикации.',
-                    channels: ['@mychannel', '@news_channel'],
-                    dateTime: '2025-06-12 10:00',
-                    image: '',
-                    status: 'scheduled'
-                },
-                {
-                    id: 2,
-                    content: 'Еще один запланированный пост с изображением.',
-                    channels: ['-1001234567890'],
-                    dateTime: '2025-06-12 15:30',
-                    image: 'https://via.placeholder.com/300x200',
-                    status: 'scheduled'
-                }
-            ];
+        async function loadPosts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`);
+                const data = await response.json();
+                // Transform posts to match UI
+                posts = data.map(post => ({
+                    id: post.id,
+                    content: post.content,
+                    channels: [post.channel_name || post.channel_id],
+                    dateTime: post.scheduled_time.replace('T', ' ').slice(0, 16),
+                    image: post.media_path || '',
+                    status: post.published ? 'published' : 'scheduled'
+                }));
+                updateUI();
+            } catch (error) {
+                showNotification('Ошибка загрузки постов: ' + error);
+            }
         }
 
         function setupEventListeners() {
@@ -516,79 +517,72 @@
             document.getElementById('editChannelForm').addEventListener('submit', handleEditChannelSubmit);
         }
 
-        function handleChannelSubmit(e) {
+        async function handleChannelSubmit(e) {
             e.preventDefault();
-            
             const name = document.getElementById('channelName').value;
             const channelId = document.getElementById('channelId').value;
-            const type = document.getElementById('channelType').value;
-
-            const newChannel = {
-                id: Date.now(),
-                name: name,
-                channelId: channelId,
-                type: type,
-                active: true
-            };
-
-            channels.push(newChannel);
-            updateUI();
-            
-            // Очищаем форму
-            document.getElementById('channelForm').reset();
-            
-            showNotification('Канал успешно добавлен!');
+            // const type = document.getElementById('channelType').value; // Not used in backend
+            try {
+                const response = await fetch(`${API_BASE_URL}/channels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, chat_id: channelId })
+                });
+                if (response.ok) {
+                    showNotification('Канал успешно добавлен!');
+                    document.getElementById('channelForm').reset();
+                    loadChannels();
+                } else {
+                    showNotification('Ошибка при добавлении канала');
+                }
+            } catch (error) {
+                showNotification('Ошибка при добавлении канала: ' + error);
+            }
         }
 
-        function handlePostSubmit(e) {
+        async function handlePostSubmit(e) {
             e.preventDefault();
-            
             const content = document.getElementById('postContent').value;
             const selectedChannels = Array.from(document.getElementById('postChannels').selectedOptions).map(option => option.value);
             const date = document.getElementById('postDate').value;
             const time = document.getElementById('postTime').value;
             const image = document.getElementById('postImage').value;
-
             if (selectedChannels.length === 0) {
                 alert('Выберите хотя бы один канал для публикации');
                 return;
             }
-
-            const newPost = {
-                id: Date.now(),
-                content: content,
-                channels: selectedChannels,
-                dateTime: `${date} ${time}`,
-                image: image,
-                status: 'scheduled'
-            };
-
-            posts.push(newPost);
-            updateUI();
-            
-            // Очищаем форму
+            for (const channel_id of selectedChannels) {
+                const scheduled_time = new Date(`${date}T${time}`).toISOString();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/posts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content,
+                            channel_id,
+                            scheduled_time,
+                            media_path: image ? image : undefined,
+                            media_type: image ? 'photo' : undefined
+                        })
+                    });
+                    if (!response.ok) {
+                        showNotification('Ошибка при создании поста');
+                    }
+                } catch (error) {
+                    showNotification('Ошибка при создании поста: ' + error);
+                }
+            }
+            showNotification('Пост(ы) запланирован(ы)!');
             document.getElementById('postForm').reset();
             setDefaultDateTime();
-            
-            showNotification('Пост запланирован!');
+            loadPosts();
         }
 
         function handleEditChannelSubmit(e) {
             e.preventDefault();
-            
-            if (currentEditingChannel) {
-                const name = document.getElementById('editChannelName').value;
-                const channelId = document.getElementById('editChannelId').value;
-                const type = document.getElementById('editChannelType').value;
-
-                currentEditingChannel.name = name;
-                currentEditingChannel.channelId = channelId;
-                currentEditingChannel.type = type;
-
-                updateUI();
-                closeModal();
-                showNotification('Канал обновлен!');
-            }
+            // Not implemented: backend does not support channel editing
+            showNotification('Редактирование каналов не поддерживается API');
+            closeModal();
         }
 
         function updateUI() {
@@ -600,31 +594,23 @@
 
         function updateStats() {
             document.getElementById('totalChannels').textContent = channels.length;
-            document.getElementById('activeChannels').textContent = channels.filter(c => c.active).length;
+            document.getElementById('activeChannels').textContent = channels.filter(c => c.active !== false).length;
             document.getElementById('scheduledPosts').textContent = posts.filter(p => p.status === 'scheduled').length;
-            document.getElementById('publishedToday').textContent = Math.floor(Math.random() * 10); // Заглушка
+            document.getElementById('publishedToday').textContent = posts.filter(p => p.status === 'published' && p.dateTime.startsWith(new Date().toISOString().slice(0,10))).length;
         }
 
         function updateChannelsList() {
             const container = document.getElementById('channelsList');
             container.innerHTML = '';
-
             channels.forEach(channel => {
                 const channelDiv = document.createElement('div');
                 channelDiv.className = 'channel-item';
                 channelDiv.innerHTML = `
                     <div class="channel-name">
-                        <span class="status-indicator ${channel.active ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-indicator ${channel.active !== false ? 'status-active' : 'status-inactive'}"></span>
                         ${channel.name}
                     </div>
-                    <div class="channel-id">${channel.channelId}</div>
-                    <div class="channel-actions">
-                        <button class="btn btn-small" onclick="editChannel(${channel.id})">Редактировать</button>
-                        <button class="btn btn-secondary btn-small" onclick="toggleChannel(${channel.id})">
-                            ${channel.active ? 'Деактивировать' : 'Активировать'}
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="deleteChannel(${channel.id})">Удалить</button>
-                    </div>
+                    <div class="channel-id">${channel.chat_id}</div>
                 `;
                 container.appendChild(channelDiv);
             });
@@ -633,10 +619,9 @@
         function updateChannelOptions() {
             const select = document.getElementById('postChannels');
             select.innerHTML = '';
-
-            channels.filter(c => c.active).forEach(channel => {
+            channels.filter(c => c.active !== false).forEach(channel => {
                 const option = document.createElement('option');
-                option.value = channel.channelId;
+                option.value = channel.chat_id;
                 option.textContent = channel.name;
                 select.appendChild(option);
             });
@@ -645,7 +630,6 @@
         function updatePostsQueue() {
             const container = document.getElementById('postsQueue');
             container.innerHTML = '';
-
             posts.forEach(post => {
                 const postDiv = document.createElement('div');
                 postDiv.className = 'post-item';
@@ -653,54 +637,9 @@
                     <div class="post-content">${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</div>
                     <div class="post-schedule">📅 ${post.dateTime}</div>
                     <div class="post-channels">📢 ${post.channels.join(', ')}</div>
-                    <div class="channel-actions">
-                        <button class="btn btn-small" onclick="editPost(${post.id})">Редактировать</button>
-                        <button class="btn btn-danger btn-small" onclick="deletePost(${post.id})">Удалить</button>
-                    </div>
                 `;
                 container.appendChild(postDiv);
             });
-        }
-
-        function editChannel(id) {
-            const channel = channels.find(c => c.id === id);
-            if (channel) {
-                currentEditingChannel = channel;
-                document.getElementById('editChannelName').value = channel.name;
-                document.getElementById('editChannelId').value = channel.channelId;
-                document.getElementById('editChannelType').value = channel.type;
-                document.getElementById('editModal').style.display = 'block';
-            }
-        }
-
-        function toggleChannel(id) {
-            const channel = channels.find(c => c.id === id);
-            if (channel) {
-                channel.active = !channel.active;
-                updateUI();
-                showNotification(`Канал ${channel.active ? 'активирован' : 'деактивирован'}`);
-            }
-        }
-
-        function deleteChannel(id) {
-            if (confirm('Вы уверены, что хотите удалить этот канал?')) {
-                channels = channels.filter(c => c.id !== id);
-                updateUI();
-                showNotification('Канал удален');
-            }
-        }
-
-        function deletePost(id) {
-            if (confirm('Вы уверены, что хотите удалить этот пост?')) {
-                posts = posts.filter(p => p.id !== id);
-                updateUI();
-                showNotification('Пост удален');
-            }
-        }
-
-        function editPost(id) {
-            // Здесь можно добавить функционал редактирования поста
-            alert('Функция редактирования поста будет добавлена позже');
         }
 
         function closeModal() {
@@ -709,14 +648,13 @@
         }
 
         function refreshData() {
-            // Анимация обновления
             const btn = document.querySelector('.floating-btn');
             btn.style.transform = 'rotate(360deg) scale(1.1)';
             setTimeout(() => {
                 btn.style.transform = 'scale(1)';
             }, 500);
-            
-            updateUI();
+            loadChannels();
+            loadPosts();
             showNotification('Данные обновлены');
         }
 
@@ -724,16 +662,13 @@
             const now = new Date();
             const tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
-            
             const dateStr = tomorrow.toISOString().split('T')[0];
             const timeStr = '10:00';
-            
             document.getElementById('postDate').value = dateStr;
             document.getElementById('postTime').value = timeStr;
         }
 
         function showNotification(message) {
-            // Простая система уведомлений
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -748,15 +683,12 @@
                 animation: slideIn 0.3s ease;
             `;
             notification.textContent = message;
-            
             document.body.appendChild(notification);
-            
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
 
-        // Закрытие модального окна по клику вне его
         window.onclick = function(event) {
             const modal = document.getElementById('editModal');
             if (event.target === modal) {
@@ -764,7 +696,6 @@
             }
         }
 
-        // Добавляем стили для анимации уведомлений
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideIn {

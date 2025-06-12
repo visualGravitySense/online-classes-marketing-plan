@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика публикаций - Telegram Bot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .groups-table {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+
+        .table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.paused {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .date-filter {
+            padding: 10px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Статистика публикаций</h1>
+            <p>Автоматическая публикация постов в Telegram группах</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="updateStats()">🔄 Обновить данные</button>
+            <button class="btn btn-secondary" onclick="exportStats()">📥 Экспорт</button>
+            <input type="date" class="date-filter" id="dateFrom" onchange="filterByDate()">
+            <input type="date" class="date-filter" id="dateTo" onchange="filterByDate()">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Загрузка данных...</p>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPosts">1,247</div>
+                <div class="stat-label">Всего постов</div>
+                <div class="stat-change positive">+12% за неделю</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeGroups">23</div>
+                <div class="stat-label">Активных групп</div>
+                <div class="stat-change positive">+2 новые</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="scheduledPosts">156</div>
+                <div class="stat-label">Запланировано</div>
+                <div class="stat-change">сегодня</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">98%</div>
+                <div class="stat-label">Успешность</div>
+                <div class="stat-change positive">+0.5%</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">📈 Публикации по дням</div>
+                <canvas id="postsChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">🎯 Статус публикаций</div>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="groups-table">
+            <div class="table-title">📋 Статистика по группам</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Группа</th>
+                        <th>Опубликовано</th>
+                        <th>Запланировано</th>
+                        <th>Успешность</th>
+                        <th>Статус</th>
+                        <th>Последняя публикация</th>
+                    </tr>
+                </thead>
+                <tbody id="groupsTableBody">
+                    <tr>
+                        <td>🎮 Gaming Community</td>
+                        <td>342</td>
+                        <td>45</td>
+                        <td>99%</td>
+                        <td><span class="status active">Активна</span></td>
+                        <td>2 часа назад</td>
+                    </tr>
+                    <tr>
+                        <td>💼 Business Hub</td>
+                        <td>287</td>
+                        <td>32</td>
+                        <td>97%</td>
+                        <td><span class="status active">Активна</span></td>
+                        <td>1 час назад</td>
+                    </tr>
+                    <tr>
+                        <td>🎨 Design Studio</td>
+                        <td>198</td>
+                        <td>28</td>
+                        <td>95%</td>
+                        <td><span class="status paused">Пауза</span></td>
+                        <td>5 часов назад</td>
+                    </tr>
+                    <tr>
+                        <td>📚 Study Group</td>
+                        <td>156</td>
+                        <td>21</td>
+                        <td>92%</td>
+                        <td><span class="status error">Ошибка</span></td>
+                        <td>1 день назад</td>
+                    </tr>
+                    <tr>
+                        <td>🍕 Food Lovers</td>
+                        <td>264</td>
+                        <td>30</td>
+                        <td>98%</td>
+                        <td><span class="status active">Активна</span></td>
+                        <td>30 минут назад</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        let posts = [];
+        let channels = [];
+
+        // Chart.js chart instances
+        let postsChart, statusChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadChannelsAndPosts();
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(today.getDate() - 7);
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+        });
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`);
+                const stats = await response.json();
+                document.getElementById('totalPosts').textContent = stats.total_posts;
+                document.getElementById('activeGroups').textContent = stats.active_channels;
+                document.getElementById('scheduledPosts').textContent = stats.total_posts - stats.published_posts - stats.failed_posts;
+                document.getElementById('successRate').textContent = `${stats.success_rate.toFixed(1)}%`;
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
+        }
+
+        async function loadChannelsAndPosts() {
+            try {
+                const [channelsRes, postsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/channels`),
+                    fetch(`${API_BASE_URL}/posts`)
+                ]);
+                channels = await channelsRes.json();
+                posts = await postsRes.json();
+                updateGroupsTable();
+                updateCharts();
+            } catch (error) {
+                console.error('Ошибка загрузки каналов/постов:', error);
+            }
+        }
+
+        function updateGroupsTable() {
+            const tbody = document.getElementById('groupsTableBody');
+            tbody.innerHTML = '';
+            channels.forEach(channel => {
+                const channelPosts = posts.filter(p => p.channel_id === channel.chat_id);
+                const published = channelPosts.filter(p => p.published).length;
+                const scheduled = channelPosts.filter(p => !p.published).length;
+                const successRate = published + scheduled > 0 ? Math.round((published / (published + scheduled)) * 100) : 0;
+                const lastPost = channelPosts.length > 0 ? formatTimeAgo(channelPosts[0].scheduled_time) : '—';
+                const status = channel.active ? 'active' : 'paused';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${channel.name}</td>
+                        <td>${published}</td>
+                        <td>${scheduled}</td>
+                        <td>${successRate}%</td>
+                        <td><span class="status ${status}">${channel.active ? 'Активна' : 'Пауза'}</span></td>
+                        <td>${lastPost}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateCharts() {
+            // Posts by day of week
+            const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            const publishedByDay = [0,0,0,0,0,0,0];
+            const scheduledByDay = [0,0,0,0,0,0,0];
+            posts.forEach(post => {
+                const d = new Date(post.scheduled_time);
+                const day = (d.getDay() + 6) % 7; // Monday=0
+                if (post.published) publishedByDay[day]++;
+                else scheduledByDay[day]++;
+            });
+            if (postsChart) postsChart.destroy();
+            const ctx1 = document.getElementById('postsChart').getContext('2d');
+            postsChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Опубликовано',
+                        data: publishedByDay,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Запланировано',
+                        data: scheduledByDay,
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.1)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+            // Status chart
+            let published = 0, failed = 0, scheduled = 0;
+            posts.forEach(post => {
+                if (post.published) published++;
+                else if (post.error_message) failed++;
+                else scheduled++;
+            });
+            if (statusChart) statusChart.destroy();
+            const ctx2 = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Успешно', 'Ошибка', 'В ожидании'],
+                    datasets: [{
+                        data: [published, failed, scheduled],
+                        backgroundColor: [
+                            '#10b981',
+                            '#ef4444',
+                            '#f59e0b'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function formatTimeAgo(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = (now - date) / 1000;
+            if (diff < 60) return 'только что';
+            if (diff < 3600) return Math.floor(diff/60) + ' мин назад';
+            if (diff < 86400) return Math.floor(diff/3600) + ' ч назад';
+            return Math.floor(diff/86400) + ' дн назад';
+        }
+
+        function updateStats() {
+            document.getElementById('loading').style.display = 'block';
+            Promise.all([
+                loadStats(),
+                loadChannelsAndPosts()
+            ]).then(() => {
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        function exportStats() {
+            // Симуляция экспорта
+            alert('📊 Экспорт статистики начат! Файл будет сохранен в формате CSV.');
+        }
+
+        function filterByDate() {
+            // (Optional) Implement filtering if needed
+        }
+
+        // Автообновление каждые 5 минут
+        setInterval(function() {
+            updateStats();
+        }, 300000);
+    </script>
+</body>
+</html>
