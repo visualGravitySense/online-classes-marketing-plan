@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot - Автоматическая публикация постов</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .header-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5); }
+            to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stats-overview {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-item.posts { border-left-color: #667eea; }
+        .stat-item.groups { border-left-color: #4ecdc4; }
+        .stat-item.success { border-left-color: #48bb78; }
+        .stat-item.pending { border-left-color: #ed8936; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .activity-feed {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .activity-icon.success { background: #48bb78; }
+        .activity-icon.warning { background: #ed8936; }
+        .activity-icon.error { background: #f56565; }
+        .activity-icon.info { background: #4299e1; }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .schedule-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .schedule-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .schedule-time {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .schedule-details h4 {
+            color: #2d3748;
+            margin-bottom: 3px;
+        }
+
+        .schedule-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .schedule-status {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .schedule-status.active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .schedule-status.pending {
+            background: #fef5e7;
+            color: #744210;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(237, 137, 54, 0.3);
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .group-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .group-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        .group-status {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .group-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .group-stat {
+            text-align: center;
+        }
+
+        .group-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .group-stat-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .group-next-post {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid,
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Анимация загрузки */
+        .loading-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: translateX(-100%);
+            animation: loading-slide 2s ease-in-out infinite;
+            z-index: 1000;
+        }
+
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-animation" id="loadingBar"></div>
+    
+    <div class="dashboard">
+        <!-- Заголовок -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">🤖</div>
+                    <div class="header-text">
+                        <h1>Telegram Bot Dashboard</h1>
+                        <p>Автоматическая публикация постов по расписанию</p>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Система активна</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Быстрые действия -->
+        <div class="quick-actions">
+            <button class="action-btn btn-primary" onclick="createPost()">
+                ➕ Создать пост
+            </button>
+            <button class="action-btn btn-secondary" onclick="manageSchedule()">
+                📅 Управление расписанием
+            </button>
+            <button class="action-btn btn-warning" onclick="viewLogs()">
+                📋 Журнал событий
+            </button>
+            <button class="action-btn btn-primary" onclick="refreshDashboard()">
+                🔄 Обновить
+            </button>
+        </div>
+
+        <!-- Основная сетка -->
+        <div class="main-grid">
+            <!-- Общая статистика -->
+            <div class="stats-overview">
+                <h2 class="section-title">📊 Общая статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-item posts">
+                        <div class="stat-number" id="totalPosts">1,247</div>
+                        <div class="stat-label">Всего постов</div>
+                    </div>
+                    <div class="stat-item groups">
+                        <div class="stat-number" id="activeGroups">12</div>
+                        <div class="stat-label">Активных групп</div>
+                    </div>
+                    <div class="stat-item success">
+                        <div class="stat-number" id="successRate">98.5%</div>
+                        <div class="stat-label">Успешность</div>
+                    </div>
+                    <div class="stat-item pending">
+                        <div class="stat-number" id="pendingPosts">23</div>
+                        <div class="stat-label">В очереди</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Лента активности -->
+            <div class="activity-feed">
+                <h2 class="section-title">📈 Последняя активность</h2>
+                <div class="activity-item">
+                    <div class="activity-icon success">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Пост опубликован в "Технические новости"</div>
+                        <div class="activity-time">2 минуты назад</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon info">📅</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Запланирован пост на 15:30 в "Бизнес канал"</div>
+                        <div class="activity-time">5 минут назад</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon success">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Пост опубликован в "Лайфстайл"</div>
+                        <div class="activity-time">12 минут назад</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon warning">⚠</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Задержка публикации в "IT сообщество"</div>
+                        <div class="activity-time">18 минут назад</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon success">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Пост опубликован в "Новости дня"</div>
+                        <div class="activity-time">25 минут назад</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h2 class="section-title">📈 Статистика публикаций за неделю</h2>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2 class="section-title">🎯 Распределение по группам</h2>
+                <canvas id="groupsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Расписание -->
+        <div class="schedule-section">
+            <h2 class="section-title">⏰ Ближайшие публикации</h2>
+            <div class="schedule-item">
+                <div class="schedule-info">
+                    <div class="schedule-time">15:30</div>
+                    <div class="schedule-details">
+                        <h4>Технические новости</h4>
+                        <p>Обзор новых технологий в IT</p>
+                    </div>
+                </div>
+                <div class="schedule-status active">Готов</div>
+            </div>
+            <div class="schedule-item">
+                <div class="schedule-info">
+                    <div class="schedule-time">16:00</div>
+                    <div class="schedule-details">
+                        <h4>Бизнес канал</h4>
+                        <p>Еженедельный обзор рынка</p>
+                    </div>
+                </div>
+                <div class="schedule-status pending">Ожидание</div>
+            </div>
+            <div class="schedule-item">
+                <div class="schedule-info">
+                    <div class="schedule-time">18:00</div>
+                    <div class="schedule-details">
+                        <h4>Лайфстайл</h4>
+                        <p>Советы по здоровому образу жизни</p>
+                    </div>
+                </div>
+                <div class="schedule-status active">Готов</div>
+            </div>
+        </div>
+
+        <!-- Карточки групп -->
+        <div style="margin-top: 30px;">
+            <h2 class="section-title">👥 Активные группы</h2>
+            <div class="groups-grid">
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">Технические новости</div>
+                        <div class="group-status" style="background: #c6f6d5; color: #22543d;">Активна</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">89</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">1.2K</div>
+                            <div class="group-stat-label">Участники</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">95%</div>
+                            <div class="group-stat-label">Успешность</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Следующий пост: Сегодня в 15:30
+                    </div>
+                </div>
+
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">Бизнес канал</div>
+                        <div class="group-status" style="background: #c6f6d5; color: #22543d;">Активна</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">67</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">856</div>
+                            <div class="group-stat-label">Участники</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">92%</div>
+                            <div class="group-stat-label">Успешность</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Следующий пост: Сегодня в 16:00
+                    </div>
+                </div>
+
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">Лайфстайл</div>
+                        <div class="group-status" style="background: #fef5e7; color: #744210;">Ожидание</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">45</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">2.1K</div>
+                            <div class="group-stat-label">Участники</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">88%</div>
+                            <div class="group-stat-label">Успешность</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Следующий пост: Сегодня в 18:00
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        // Initialize charts
+        let weeklyChart, groupsChart;
+        
+        // Load data from API
+        async function loadDashboardData() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch(`${API_BASE_URL}/stats`);
+                const stats = await statsResponse.json();
+                updateStats(stats);
+                
+                // Load activity feed
+                const activityResponse = await fetch(`${API_BASE_URL}/activity`);
+                const activities = await activityResponse.json();
+                updateActivityFeed(activities);
+                
+                // Load channels
+                const channelsResponse = await fetch(`${API_BASE_URL}/channels`);
+                const channels = await channelsResponse.json();
+                updateChannels(channels);
+                
+                // Initialize charts
+                initCharts();
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showNotification('Error loading dashboard data', 'error');
+            }
+        }
+        
+        // Update statistics
+        function updateStats(stats) {
+            document.getElementById('totalPosts').textContent = stats.total_posts;
+            document.getElementById('activeGroups').textContent = stats.active_channels;
+            document.getElementById('successRate').textContent = `${stats.success_rate.toFixed(1)}%`;
+            document.getElementById('pendingPosts').textContent = 
+                stats.total_posts - stats.published_posts - stats.failed_posts;
+        }
+        
+        // Update activity feed
+        function updateActivityFeed(activities) {
+            const activityFeed = document.querySelector('.activity-feed');
+            const activityItems = activities.map(activity => {
+                const status = activity.error_message ? 'error' : 'success';
+                const icon = activity.error_message ? '⚠' : '✓';
+                const time = new Date(activity.scheduled_time).toLocaleString();
+                
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon ${status}">${icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">${activity.content.substring(0, 100)}...</div>
+                            <div class="activity-time">${time}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            activityFeed.innerHTML = `
+                <h2 class="section-title">📈 Последняя активность</h2>
+                ${activityItems}
+            `;
+        }
+        
+        // Update channels
+        function updateChannels(channels) {
+            const groupsGrid = document.querySelector('.groups-grid');
+            const channelCards = channels.map(channel => `
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">${channel.name}</div>
+                        <div class="group-status" style="background: ${channel.active ? '#c6f6d5' : '#fef5e7'}; color: ${channel.active ? '#22543d' : '#744210'}">
+                            ${channel.active ? 'Активна' : 'Ожидание'}
+                        </div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">${channel.post_count || 0}</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">${channel.member_count || 0}</div>
+                            <div class="group-stat-label">Участники</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">${channel.success_rate || 0}%</div>
+                            <div class="group-stat-label">Успешность</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            groupsGrid.innerHTML = channelCards;
+        }
+        
+        // Create new post
+        async function createPost() {
+            try {
+                const content = prompt('Enter post content:');
+                if (!content) return;
+                
+                const channelId = prompt('Enter channel ID:');
+                if (!channelId) return;
+                
+                const scheduledTime = prompt('Enter scheduled time (YYYY-MM-DD HH:mm):');
+                if (!scheduledTime) return;
+                
+                const response = await fetch(`${API_BASE_URL}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content,
+                        channel_id: channelId,
+                        scheduled_time: new Date(scheduledTime).toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification('Post created successfully', 'success');
+                    loadDashboardData();
+                } else {
+                    throw new Error('Failed to create post');
+                }
+            } catch (error) {
+                console.error('Error creating post:', error);
+                showNotification('Error creating post', 'error');
+            }
+        }
+        
+        // Manage schedule
+        async function manageSchedule() {
+            try {
+                const action = confirm('Do you want to start the scheduler?') ? 'start' : 'stop';
+                const response = await fetch(`${API_BASE_URL}/scheduler/${action}`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    showNotification(`Scheduler ${action}ed successfully`, 'success');
+                } else {
+                    throw new Error(`Failed to ${action} scheduler`);
+                }
+            } catch (error) {
+                console.error('Error managing schedule:', error);
+                showNotification('Error managing schedule', 'error');
+            }
+        }
+        
+        // View logs
+        function viewLogs() {
+            showNotification('Loading logs...', 'info');
+            // Implement logs viewing functionality
+        }
+        
+        // Refresh dashboard
+        async function refreshDashboard() {
+            const loadingBar = document.getElementById('loadingBar');
+            loadingBar.style.display = 'block';
+            
+            try {
+                await loadDashboardData();
+                showNotification('Dashboard refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Error refreshing dashboard:', error);
+                showNotification('Error refreshing dashboard', 'error');
+            } finally {
+                loadingBar.style.display = 'none';
+            }
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Implement notification system
+            console.log(`${type}: ${message}`);
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+        });
+    </script>
+</body>
+</html>

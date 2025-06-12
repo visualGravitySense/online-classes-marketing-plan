@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Планировщик контента Telegram Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .calendar-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .month-year {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .calendar th,
+        .calendar td {
+            text-align: center;
+            padding: 15px 5px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        .calendar th {
+            background: linear-gradient(135deg, #f8f9ff, #e8eeff);
+            font-weight: 600;
+            color: #5a67d8;
+        }
+
+        .calendar td {
+            height: 80px;
+            vertical-align: top;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .calendar td:hover {
+            background: linear-gradient(135deg, #f0f4ff, #e8eeff);
+            transform: scale(1.02);
+        }
+
+        .calendar td.other-month {
+            color: #ccc;
+            background: #f9f9f9;
+        }
+
+        .calendar td.today {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+        }
+
+        .calendar td.has-posts {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .post-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-form {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            margin-top: 10px;
+        }
+
+        .scheduled-posts {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .post-item {
+            background: linear-gradient(135deg, #f8f9ff, #e8eeff);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .post-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .post-item p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status.scheduled {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .status.published {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar th,
+            .calendar td {
+                padding: 8px 2px;
+                font-size: 12px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Планировщик контента</h1>
+            <p>Автоматическая публикация постов в Telegram группах по расписанию</p>
+        </div>
+
+        <div class="main-content">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button class="nav-btn" onclick="previousMonth()">‹</button>
+                        <div class="month-year" id="monthYear"></div>
+                        <button class="nav-btn" onclick="nextMonth()">›</button>
+                    </div>
+                </div>
+                
+                <table class="calendar" id="calendar">
+                    <thead>
+                        <tr>
+                            <th>Пн</th>
+                            <th>Вт</th>
+                            <th>Ср</th>
+                            <th>Чт</th>
+                            <th>Пт</th>
+                            <th>Сб</th>
+                            <th>Вс</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sidebar">
+                <div class="post-form">
+                    <h3>📝 Новый пост</h3>
+                    <form id="postForm">
+                        <div class="form-group">
+                            <label>Текст поста</label>
+                            <textarea id="postContent" placeholder="Введите текст поста..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Группа</label>
+                            <select id="groupSelect">
+                                <option value="">Выберите группу</option>
+                                <option value="group1">Основная группа</option>
+                                <option value="group2">Новости</option>
+                                <option value="group3">Промо</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Дата публикации</label>
+                            <input type="date" id="postDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Время публикации</label>
+                            <input type="time" id="postTime" required>
+                        </div>
+                        
+                        <button type="submit" class="btn">📅 Запланировать пост</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">🗑️ Очистить</button>
+                    </form>
+                </div>
+
+                <div class="scheduled-posts">
+                    <h3>📋 Запланированные посты</h3>
+                    <div id="postsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Посты на <span id="modalDate"></span></h3>
+            <div id="modalPosts"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let scheduledPosts = [];
+        let selectedDate = null;
+
+        const months = [
+            'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+        ];
+
+        function initCalendar() {
+            renderCalendar();
+            loadScheduledPosts();
+            
+            // Set default date to today
+            const today = new Date();
+            document.getElementById('postDate').value = today.toISOString().split('T')[0];
+            document.getElementById('postTime').value = '12:00';
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('monthYear').textContent = `${months[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - (firstDay.getDay() + 6) % 7);
+            
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
+            
+            let currentWeek = document.createElement('tr');
+            let cellDate = new Date(startDate);
+            
+            for (let i = 0; i < 42; i++) {
+                const cell = document.createElement('td');
+                const day = cellDate.getDate();
+                cell.textContent = day;
+                
+                const isCurrentMonth = cellDate.getMonth() === month;
+                const isToday = cellDate.toDateString() === new Date().toDateString();
+                const dateStr = cellDate.toISOString().split('T')[0];
+                const postsCount = scheduledPosts.filter(post => post.date === dateStr).length;
+                
+                if (!isCurrentMonth) {
+                    cell.classList.add('other-month');
+                }
+                
+                if (isToday) {
+                    cell.classList.add('today');
+                }
+                
+                if (postsCount > 0) {
+                    cell.classList.add('has-posts');
+                    const indicator = document.createElement('div');
+                    indicator.className = 'post-indicator';
+                    indicator.textContent = postsCount;
+                    cell.appendChild(indicator);
+                }
+                
+                cell.addEventListener('click', () => openDayModal(dateStr));
+                
+                currentWeek.appendChild(cell);
+                
+                if ((i + 1) % 7 === 0) {
+                    calendarBody.appendChild(currentWeek);
+                    currentWeek = document.createElement('tr');
+                }
+                
+                cellDate.setDate(cellDate.getDate() + 1);
+            }
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function openDayModal(date) {
+            selectedDate = date;
+            const dayPosts = scheduledPosts.filter(post => post.date === date);
+            
+            document.getElementById('modalDate').textContent = new Date(date).toLocaleDateString('ru-RU');
+            
+            const modalPosts = document.getElementById('modalPosts');
+            modalPosts.innerHTML = '';
+            
+            if (dayPosts.length === 0) {
+                modalPosts.innerHTML = '<p>На этот день постов не запланировано</p>';
+            } else {
+                dayPosts.forEach(post => {
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'post-item';
+                    postDiv.innerHTML = `
+                        <h4>${post.group}</h4>
+                        <p>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                        <div class="post-meta">
+                            <span>${post.time}</span>
+                            <span class="status ${post.status}">${post.status === 'scheduled' ? 'Запланировано' : 'Опубликовано'}</span>
+                        </div>
+                    `;
+                    modalPosts.appendChild(postDiv);
+                });
+            }
+            
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+        }
+
+        function loadScheduledPosts() {
+            // Sample data
+            scheduledPosts = [
+                {
+                    id: 1,
+                    content: 'Добро пожаловать в нашу группу! Здесь вы найдете самые актуальные новости и полезную информацию.',
+                    group: 'Основная группа',
+                    date: '2025-06-15',
+                    time: '09:00',
+                    status: 'scheduled'
+                },
+                {
+                    id: 2,
+                    content: 'Специальная акция только сегодня! Скидка 30% на все товары.',
+                    group: 'Промо',
+                    date: '2025-06-16',
+                    time: '14:00',
+                    status: 'scheduled'
+                }
+            ];
+            
+            renderScheduledPosts();
+        }
+
+        function renderScheduledPosts() {
+            const postsList = document.getElementById('postsList');
+            postsList.innerHTML = '';
+            
+            const upcomingPosts = scheduledPosts
+                .filter(post => new Date(post.date + 'T' + post.time) > new Date())
+                .sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time))
+                .slice(0, 5);
+            
+            if (upcomingPosts.length === 0) {
+                postsList.innerHTML = '<p>Нет запланированных постов</p>';
+                return;
+            }
+            
+            upcomingPosts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post-item';
+                postDiv.innerHTML = `
+                    <h4>${post.group}</h4>
+                    <p>${post.content.substring(0, 80)}${post.content.length > 80 ? '...' : ''}</p>
+                    <div class="post-meta">
+                        <span>${new Date(post.date).toLocaleDateString('ru-RU')} в ${post.time}</span>
+                        <span class="status ${post.status}">${post.status === 'scheduled' ? 'Запланировано' : 'Опубликовано'}</span>
+                    </div>
+                `;
+                postsList.appendChild(postDiv);
+            });
+        }
+
+        document.getElementById('postForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('postContent').value;
+            const group = document.getElementById('groupSelect').value;
+            const date = document.getElementById('postDate').value;
+            const time = document.getElementById('postTime').value;
+            
+            if (!content.trim() || !group || !date || !time) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            const newPost = {
+                id: Date.now(),
+                content: content.trim(),
+                group: document.getElementById('groupSelect').options[document.getElementById('groupSelect').selectedIndex].text,
+                date: date,
+                time: time,
+                status: 'scheduled'
+            };
+            
+            scheduledPosts.push(newPost);
+            renderCalendar();
+            renderScheduledPosts();
+            clearForm();
+            
+            alert('Пост успешно запланирован!');
+        });
+
+        function clearForm() {
+            document.getElementById('postForm').reset();
+            const today = new Date();
+            document.getElementById('postDate').value = today.toISOString().split('T')[0];
+            document.getElementById('postTime').value = '12:00';
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('postModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Initialize calendar on page load
+        window.addEventListener('load', initCalendar);
+    </script>
+</body>
+</html>

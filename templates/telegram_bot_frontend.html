@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot - Управление постами</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0088cc, #0066aa);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #0088cc;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #0088cc;
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.1);
+            transform: translateY(-1px);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .content-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .content-type-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .content-type-btn:hover {
+            border-color: #0088cc;
+            transform: translateY(-2px);
+        }
+
+        .content-type-btn.active {
+            background: #0088cc;
+            color: white;
+            border-color: #0088cc;
+        }
+
+        .file-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #0088cc;
+            background: rgba(0, 136, 204, 0.05);
+        }
+
+        .file-upload.dragover {
+            border-color: #0088cc;
+            background: rgba(0, 136, 204, 0.1);
+            transform: scale(1.02);
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0088cc, #0066aa);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 136, 204, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .group-selector {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .group-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 4px 0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .group-item:hover {
+            background: rgba(0, 136, 204, 0.1);
+        }
+
+        .group-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .preview-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .post-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .post-preview h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .preview-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0088cc;
+        }
+
+        .media-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-type-selector {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Telegram Bot Manager</h1>
+            <p>Автоматическая публикация постов по расписанию</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Создание поста -->
+            <div class="section">
+                <h2>📝 Создание поста</h2>
+                
+                <div class="form-group">
+                    <label>Тип контента:</label>
+                    <div class="content-type-selector">
+                        <div class="content-type-btn active" data-type="text">📄 Текст</div>
+                        <div class="content-type-btn" data-type="image">🖼️ Фото</div>
+                        <div class="content-type-btn" data-type="video">🎥 Видео</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="postText">Текст поста:</label>
+                    <textarea id="postText" class="form-control" placeholder="Введите текст вашего поста..."></textarea>
+                </div>
+
+                <div class="form-group" id="mediaUpload">
+                    <label>Загрузить медиа:</label>
+                    <div class="file-upload" id="fileUpload">
+                        <div>📎 Перетащите файл сюда или нажмите для выбора</div>
+                        <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="postTitle">Заголовок (опционально):</label>
+                    <input type="text" id="postTitle" class="form-control" placeholder="Заголовок поста">
+                </div>
+            </div>
+
+            <!-- Настройки поста -->
+            <div class="section">
+                <h2>⚙️ Настройки публикации</h2>
+                
+                <div class="form-group">
+                    <label>Выберите группы:</label>
+                    <div class="group-selector" id="groupSelector">
+                        <div class="group-item">
+                            <input type="checkbox" id="group1" value="group1">
+                            <label for="group1">🔹 Основная группа</label>
+                        </div>
+                        <div class="group-item">
+                            <input type="checkbox" id="group2" value="group2">
+                            <label for="group2">🔸 Новости</label>
+                        </div>
+                        <div class="group-item">
+                            <input type="checkbox" id="group3" value="group3">
+                            <label for="group3">🔹 Реклама</label>
+                        </div>
+                        <div class="group-item">
+                            <input type="checkbox" id="group4" value="group4">
+                            <label for="group4">🔸 VIP Канал</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Настройки расписания:</label>
+                    <div class="schedule-grid">
+                        <div>
+                            <label for="scheduleDate">Дата:</label>
+                            <input type="date" id="scheduleDate" class="form-control">
+                        </div>
+                        <div>
+                            <label for="scheduleTime">Время:</label>
+                            <input type="time" id="scheduleTime" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="repeatMode">Режим повтора:</label>
+                    <select id="repeatMode" class="form-control">
+                        <option value="once">Один раз</option>
+                        <option value="daily">Ежедневно</option>
+                        <option value="weekly">Еженедельно</option>
+                        <option value="monthly">Ежемесячно</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="timezone">Часовой пояс:</label>
+                    <select id="timezone" class="form-control">
+                        <option value="Europe/Moscow">МСК (UTC+3)</option>
+                        <option value="Europe/Kiev">Киев (UTC+2)</option>
+                        <option value="Asia/Almaty">Алматы (UTC+6)</option>
+                        <option value="Europe/Minsk">Минск (UTC+3)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Предварительный просмотр -->
+            <div class="section preview-section">
+                <h2>👁️ Предварительный просмотр</h2>
+                <div class="post-preview">
+                    <h3>Как будет выглядеть ваш пост:</h3>
+                    <div class="preview-content" id="previewContent">
+                        <div id="previewTitle"></div>
+                        <div id="previewMedia"></div>
+                        <div id="previewText">Введите текст поста для предварительного просмотра...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="clearForm()">🗑️ Очистить</button>
+            <button class="btn btn-primary" onclick="saveAsDraft()">💾 Сохранить как черновик</button>
+            <button class="btn btn-success" onclick="schedulePost()">🚀 Запланировать публикацию</button>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let currentContentType = 'text';
+        let selectedFile = null;
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updatePreview();
+        });
+
+        function setupEventListeners() {
+            // Переключение типов контента
+            document.querySelectorAll('.content-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.content-type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentContentType = this.dataset.type;
+                    updateMediaUpload();
+                    updatePreview();
+                });
+            });
+
+            // Загрузка файлов
+            const fileUpload = document.getElementById('fileUpload');
+            const fileInput = document.getElementById('fileInput');
+
+            fileUpload.addEventListener('click', () => fileInput.click());
+            fileUpload.addEventListener('dragover', handleDragOver);
+            fileUpload.addEventListener('drop', handleDrop);
+            fileUpload.addEventListener('dragleave', handleDragLeave);
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Обновление превью при изменении текста
+            document.getElementById('postText').addEventListener('input', updatePreview);
+            document.getElementById('postTitle').addEventListener('input', updatePreview);
+
+            // Установка текущей даты и времени
+            const now = new Date();
+            document.getElementById('scheduleDate').value = now.toISOString().split('T')[0];
+            document.getElementById('scheduleTime').value = now.toTimeString().slice(0, 5);
+        }
+
+        function updateMediaUpload() {
+            const mediaUpload = document.getElementById('mediaUpload');
+            const fileInput = document.getElementById('fileInput');
+            
+            if (currentContentType === 'text') {
+                mediaUpload.classList.add('hidden');
+                fileInput.accept = '';
+            } else if (currentContentType === 'image') {
+                mediaUpload.classList.remove('hidden');
+                fileInput.accept = 'image/*';
+            } else if (currentContentType === 'video') {
+                mediaUpload.classList.remove('hidden');
+                fileInput.accept = 'video/*';
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        }
+
+        function handleFileUpload(file) {
+            const validTypes = currentContentType === 'image' ? 
+                ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] :
+                ['video/mp4', 'video/webm', 'video/ogg'];
+
+            if (!validTypes.includes(file.type)) {
+                showNotification('Неподдерживаемый тип файла!', 'error');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) { // 50MB
+                showNotification('Файл слишком большой! Максимум 50MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            const fileUpload = document.getElementById('fileUpload');
+            fileUpload.innerHTML = `
+                <div>✅ ${file.name}</div>
+                <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                    Размер: ${(file.size / 1024 / 1024).toFixed(2)} MB
+                </div>
+            `;
+            
+            updatePreview();
+            showNotification('Файл успешно загружен!', 'success');
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('postTitle').value;
+            const text = document.getElementById('postText').value;
+            
+            const previewTitle = document.getElementById('previewTitle');
+            const previewText = document.getElementById('previewText');
+            const previewMedia = document.getElementById('previewMedia');
+
+            // Обновление заголовка
+            if (title) {
+                previewTitle.innerHTML = `<h4 style="margin-bottom: 15px; color: #333;">${title}</h4>`;
+            } else {
+                previewTitle.innerHTML = '';
+            }
+
+            // Обновление текста
+            previewText.innerHTML = text || 'Введите текст поста для предварительного просмотра...';
+
+            // Обновление медиа
+            previewMedia.innerHTML = '';
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (currentContentType === 'image') {
+                        previewMedia.innerHTML = `<img src="${e.target.result}" class="media-preview" alt="Preview">`;
+                    } else if (currentContentType === 'video') {
+                        previewMedia.innerHTML = `<video src="${e.target.result}" class="media-preview" controls></video>`;
+                    }
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('postText').value = '';
+            document.getElementById('postTitle').value = '';
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            selectedFile = null;
+            
+            const fileUpload = document.getElementById('fileUpload');
+            fileUpload.innerHTML = '<div>📎 Перетащите файл сюда или нажмите для выбора</div>';
+            
+            // Сброс на текстовый тип
+            document.querySelectorAll('.content-type-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.content-type-btn[data-type="text"]').classList.add('active');
+            currentContentType = 'text';
+            updateMediaUpload();
+            
+            updatePreview();
+            showNotification('Форма очищена', 'success');
+        }
+
+        function saveAsDraft() {
+            const postData = collectFormData();
+            
+            // Симуляция сохранения
+            const drafts = JSON.parse(localStorage.getItem('telegram_bot_drafts') || '[]');
+            postData.id = Date.now();
+            postData.created = new Date().toISOString();
+            drafts.push(postData);
+            localStorage.setItem('telegram_bot_drafts', JSON.stringify(drafts));
+            
+            showNotification('Черновик сохранен!', 'success');
+        }
+
+        function schedulePost() {
+            const postData = collectFormData();
+            
+            // Валидация
+            if (!postData.text && !postData.media) {
+                showNotification('Добавьте текст или медиа к посту!', 'error');
+                return;
+            }
+            
+            if (postData.groups.length === 0) {
+                showNotification('Выберите хотя бы одну группу!', 'error');
+                return;
+            }
+            
+            // Симуляция отправки на сервер
+            console.log('Планирование поста:', postData);
+            
+            // Имитация API запроса
+            setTimeout(() => {
+                showNotification('Пост успешно запланирован!', 'success');
+                clearForm();
+            }, 1000);
+        }
+
+        function collectFormData() {
+            const selectedGroups = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            return {
+                type: currentContentType,
+                title: document.getElementById('postTitle').value,
+                text: document.getElementById('postText').value,
+                media: selectedFile ? {
+                    name: selectedFile.name,
+                    size: selectedFile.size,
+                    type: selectedFile.type
+                } : null,
+                groups: selectedGroups,
+                scheduleDate: document.getElementById('scheduleDate').value,
+                scheduleTime: document.getElementById('scheduleTime').value,
+                repeatMode: document.getElementById('repeatMode').value,
+                timezone: document.getElementById('timezone').value
+            };
+        }
+
+        function showNotification(message, type = 'success') {
+            // Удаление существующих уведомлений
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Показать уведомление
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Скрыть через 3 секунды
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
