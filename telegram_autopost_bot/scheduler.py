@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 from typing import Callable, Dict, List
 import logging
+from aiogram import Bot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class PostScheduler:
-    def __init__(self, db, bot, posting_schedule: Dict[str, List[str]]):
+    def __init__(self, db, bot: Bot, posting_schedule: Dict[str, List[str]]):
         self.db = db
         self.bot = bot
         self.posting_schedule = posting_schedule

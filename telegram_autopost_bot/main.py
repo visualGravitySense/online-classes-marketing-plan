@@ -1,15 +1,9 @@
 import logging
 import os
 from datetime import datetime
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-    ConversationHandler
-)
-from telegram import Update, ReplyKeyboardMarkup
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from config import BOT_TOKEN, ADMIN_ID, CHANNELS, POST_TEMPLATES
 from database import Database
 from scheduler import PostScheduler
@@ -27,34 +21,35 @@ CHOOSING_CHANNEL, ENTERING_CONTENT, ENTERING_MEDIA, ENTERING_TIME = range(4)
 class TelegramBot:
     def __init__(self):
         self.db = Database('data/posts.db')
-        self.application = Application.builder().token(BOT_TOKEN).build()
-        self.scheduler = PostScheduler(self.db, self.application.bot, {})
+        self.bot = Bot(token=BOT_TOKEN)
+        self.dp = Dispatcher()
+        self.scheduler = PostScheduler(self.db, self.bot, {})
         
         # Set up command handlers
-        self.application.add_handler(CommandHandler("start", self.start))
-        self.application.add_handler(CommandHandler("help", self.help_command))
-        self.application.add_handler(CommandHandler("add_post", self.add_post))
-        self.application.add_handler(CommandHandler("schedule", self.show_schedule))
-        self.application.add_handler(CommandHandler("stats", self.show_stats))
-        self.application.add_handler(CommandHandler("channels", self.manage_channels))
-        self.application.add_handler(CommandHandler("pause", self.pause_posting))
-        self.application.add_handler(CommandHandler("resume", self.resume_posting))
+        self.dp.message.register(self.start, Command(commands=["start"]))
+        self.dp.message.register(self.help_command, Command(commands=["help"]))
+        self.dp.message.register(self.add_post, Command(commands=["add_post"]))
+        self.dp.message.register(self.show_schedule, Command(commands=["schedule"]))
+        self.dp.message.register(self.show_stats, Command(commands=["stats"]))
+        self.dp.message.register(self.manage_channels, Command(commands=["channels"]))
+        self.dp.message.register(self.pause_posting, Command(commands=["pause"]))
+        self.dp.message.register(self.resume_posting, Command(commands=["resume"]))
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def start(self, message: types.Message):
         """Send a message when the command /start is issued."""
-        user = update.effective_user
+        user = message.from_user
         if user.id != ADMIN_ID:
-            await update.message.reply_text("Sorry, this bot is for admin use only.")
+            await message.reply("Sorry, this bot is for admin use only.")
             return
 
-        await update.message.reply_text(
+        await message.reply(
             f"Hi {user.first_name}! I'm your Telegram autoposting bot.\n\n"
             "Use /help to see available commands."
         )
 
-    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def help_command(self, message: types.Message):
         """Send a message when the command /help is issued."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         help_text = """
@@ -67,39 +62,40 @@ Available commands:
 /resume - Resume autoposting
 /help - Show this help message
 """
-        await update.message.reply_text(help_text)
+        await message.reply(help_text)
 
-    async def add_post(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def add_post(self, message: types.Message):
         """Start the process of adding a new post."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         # Get available channels
         channels = self.db.get_active_channels()
         if not channels:
-            await update.message.reply_text("No active channels found. Please add a channel first.")
+            await message.reply("No active channels found. Please add a channel first.")
             return
 
         # Create channel selection keyboard
-        keyboard = [[channel['name']] for channel in channels]
-        reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-
-        await update.message.reply_text(
-            "Please select a channel for the post:",
-            reply_markup=reply_markup
+        keyboard = ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=channel['name'])] for channel in channels],
+            one_time_keyboard=True
         )
-        return CHOOSING_CHANNEL
 
-    async def show_schedule(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await message.reply(
+            "Please select a channel for the post:",
+            reply_markup=keyboard
+        )
+
+    async def show_schedule(self, message: types.Message):
         """Show the current posting schedule."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         # Get pending posts
         pending_posts = self.db.get_pending_posts()
         
         if not pending_posts:
-            await update.message.reply_text("No pending posts in the schedule.")
+            await message.reply("No pending posts in the schedule.")
             return
 
         schedule_text = "📅 Pending Posts:\n\n"
@@ -109,11 +105,11 @@ Available commands:
             schedule_text += f"Channel: {post['channel_id']}\n"
             schedule_text += "---\n"
 
-        await update.message.reply_text(schedule_text)
+        await message.reply(schedule_text)
 
-    async def show_stats(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def show_stats(self, message: types.Message):
         """Show posting statistics."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         # Get statistics from database
@@ -140,32 +136,55 @@ Available commands:
         stats_text += f"Failed: {failed_posts}\n"
         stats_text += f"Success Rate: {(published_posts/total_posts*100 if total_posts > 0 else 0):.1f}%"
 
-        await update.message.reply_text(stats_text)
+        await message.reply(stats_text)
 
-    async def pause_posting(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def manage_channels(self, message: types.Message):
+        """Manage channels for posting."""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        # Get all channels
+        channels = self.db.get_active_channels()
+        
+        if not channels:
+            await message.reply("No channels configured. Use /add_channel to add a new channel.")
+            return
+
+        channels_text = "📢 Configured Channels:\n\n"
+        for channel in channels:
+            status = "✅ Active" if channel['active'] else "❌ Inactive"
+            channels_text += f"Name: {channel['name']}\n"
+            channels_text += f"ID: {channel['chat_id']}\n"
+            channels_text += f"Status: {status}\n"
+            channels_text += "---\n"
+
+        await message.reply(channels_text)
+
+    async def pause_posting(self, message: types.Message):
         """Pause the autoposting scheduler."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         self.scheduler.stop()
-        await update.message.reply_text("Autoposting has been paused.")
+        await message.reply("Autoposting has been paused.")
 
-    async def resume_posting(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def resume_posting(self, message: types.Message):
         """Resume the autoposting scheduler."""
-        if update.effective_user.id != ADMIN_ID:
+        if message.from_user.id != ADMIN_ID:
             return
 
         self.scheduler.start()
-        await update.message.reply_text("Autoposting has been resumed.")
+        await message.reply("Autoposting has been resumed.")
 
-    def run(self):
+    async def run(self):
         """Start the bot."""
         # Start the scheduler
         self.scheduler.start()
         
         # Start the bot
-        self.application.run_polling()
+        await self.dp.start_polling(self.bot)
 
 if __name__ == '__main__':
+    import asyncio
     bot = TelegramBot()
-    bot.run() 
+    asyncio.run(bot.run()) 
