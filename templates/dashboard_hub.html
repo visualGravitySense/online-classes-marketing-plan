@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Единый Telegram Bot Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; display: flex; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar {
+            width: 260px; background: #2d3748; color: #fff; padding: 30px 0;
+            display: flex; flex-direction: column; align-items: stretch;
+            box-shadow: 2px 0 20px rgba(44,62,80,0.08);
+        }
+        .sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 2rem; letter-spacing: 1px; }
+        .menu { list-style: none; padding: 0; margin: 0; }
+        .menu li {
+            padding: 18px 30px; cursor: pointer; transition: background 0.2s;
+            font-size: 1.1rem; border-left: 4px solid transparent;
+        }
+        .menu li.active, .menu li:hover { background: #4a5568; border-left: 4px solid #667eea; }
+        .main-content { flex: 1; background: #f7fafc; padding: 0; overflow-y: auto; min-height: 100vh; }
+        @media (max-width: 900px) {
+            .sidebar { width: 100px; padding: 10px 0; }
+            .sidebar h2 { font-size: 1.2rem; }
+            .menu li { padding: 14px 10px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Telegram Bot</h2>
+        <ul class="menu">
+            <li class="active" onclick="showDashboard('main')">Главная</li>
+            <li onclick="showDashboard('posts')">Посты</li>
+            <li onclick="showDashboard('groups')">Группы</li>
+            <li onclick="showDashboard('stats')">Статистика</li>
+        </ul>
+    </div>
+    <div class="main-content" id="dashboardContent">
+        <!-- Здесь будет отображаться выбранный дашборд -->
+    </div>
+    <script>
+        // Пути к html-фрагментам или шаблонам
+        const dashboards = {
+            main: 'templates/telegram_bot_main_dashboard.html',
+            posts: 'templates/telegram_bot_frontend.html',
+            groups: 'templates/tg-gruops-dashboard.html',
+            stats: 'templates/telegram_bot_stats.html'
+        };
+
+        function showDashboard(name) {
+            // Активное меню
+            document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
+            const idx = Object.keys(dashboards).indexOf(name);
+            document.querySelectorAll('.menu li')[idx].classList.add('active');
+
+            // Загрузка дашборда
+            fetch(dashboards[name])
+                .then(r => r.text())
+                .then(html => {
+                    // Вырезаем только <body> содержимое, если нужно
+                    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+                    document.getElementById('dashboardContent').innerHTML = bodyMatch ? bodyMatch[1] : html;
+                    // Выполнить все <script> внутри подгруженного html
+                    document.getElementById('dashboardContent').querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.text = oldScript.text;
+                        }
+                        document.body.appendChild(newScript);
+                        oldScript.remove();
+                    });
+                });
+        }
+
+        // По умолчанию — главная
+        showDashboard('main');
+    </script>
+</body>
+</html> 

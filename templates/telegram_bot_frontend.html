@@ -438,15 +438,36 @@
     </div>
 
     <script>
-        // Глобальные переменные
+        const API_BASE_URL = 'http://localhost:8000/api';
         let currentContentType = 'text';
         let selectedFile = null;
+        let channels = [];
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
+            loadGroups();
             updatePreview();
         });
+
+        async function loadGroups() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/channels`);
+                channels = await response.json();
+                const groupSelector = document.getElementById('groupSelector');
+                groupSelector.innerHTML = '';
+                channels.forEach((channel, idx) => {
+                    const id = `group${idx}`;
+                    groupSelector.innerHTML += `
+                        <div class="group-item">
+                            <input type="checkbox" id="${id}" value="${channel.chat_id}">
+                            <label for="${id}">${channel.name}</label>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                showNotification('Ошибка загрузки групп: ' + error, 'error');
+            }
+        }
 
         function setupEventListeners() {
             // Переключение типов контента
@@ -613,28 +634,53 @@
             showNotification('Черновик сохранен!', 'success');
         }
 
-        function schedulePost() {
+        async function schedulePost() {
             const postData = collectFormData();
-            
-            // Валидация
             if (!postData.text && !postData.media) {
                 showNotification('Добавьте текст или медиа к посту!', 'error');
                 return;
             }
-            
             if (postData.groups.length === 0) {
                 showNotification('Выберите хотя бы одну группу!', 'error');
                 return;
             }
-            
-            // Симуляция отправки на сервер
-            console.log('Планирование поста:', postData);
-            
-            // Имитация API запроса
-            setTimeout(() => {
-                showNotification('Пост успешно запланирован!', 'success');
+            // Prepare scheduled_time
+            const scheduled_time = new Date(`${postData.scheduleDate}T${postData.scheduleTime}`).toISOString();
+            // For each group, send a post
+            let allOk = true;
+            for (const channel_id of postData.groups) {
+                let media_path = undefined;
+                let media_type = undefined;
+                // If media is present and is an image or video, you can use a URL or handle upload if backend supports
+                if (postData.media) {
+                    // For now, only support image URL (not file upload)
+                    showNotification('Загрузка файлов не поддерживается, используйте URL для медиа.', 'error');
+                    allOk = false;
+                    continue;
+                }
+                try {
+                    const response = await fetch(`${API_BASE_URL}/posts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: (postData.title ? postData.title + '\n' : '') + postData.text,
+                            channel_id,
+                            scheduled_time,
+                            media_path,
+                            media_type
+                        })
+                    });
+                    if (!response.ok) allOk = false;
+                } catch (error) {
+                    allOk = false;
+                }
+            }
+            if (allOk) {
+                showNotification('Пост(ы) успешно запланированы!', 'success');
                 clearForm();
-            }, 1000);
+            } else {
+                showNotification('Ошибка при планировании поста(ов)', 'error');
+            }
         }
 
         function collectFormData() {

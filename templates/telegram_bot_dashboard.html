@@ -393,9 +393,6 @@
                             <label>Группа</label>
                             <select id="groupSelect">
                                 <option value="">Выберите группу</option>
-                                <option value="group1">Основная группа</option>
-                                <option value="group2">Новости</option>
-                                <option value="group3">Промо</option>
                             </select>
                         </div>
                         
@@ -432,6 +429,7 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
         let currentDate = new Date();
         let scheduledPosts = [];
         let selectedDate = null;
@@ -441,10 +439,43 @@
             'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
         ];
 
+        async function loadGroups() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/channels`);
+                const channels = await response.json();
+                const groupSelect = document.getElementById('groupSelect');
+                groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                channels.forEach(channel => {
+                    groupSelect.innerHTML += `<option value="${channel.chat_id}">${channel.name}</option>`;
+                });
+            } catch (error) {
+                alert('Ошибка загрузки групп: ' + error);
+            }
+        }
+
+        async function loadScheduledPosts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`);
+                const posts = await response.json();
+                scheduledPosts = posts.map(post => ({
+                    id: post.id,
+                    content: post.content,
+                    group: post.channel_name || post.channel_id,
+                    date: post.scheduled_time.split('T')[0],
+                    time: post.scheduled_time.split('T')[1].slice(0,5),
+                    status: post.published ? 'published' : 'scheduled'
+                }));
+                renderScheduledPosts();
+                renderCalendar();
+            } catch (error) {
+                alert('Ошибка загрузки постов: ' + error);
+            }
+        }
+
         function initCalendar() {
             renderCalendar();
+            loadGroups();
             loadScheduledPosts();
-            
             // Set default date to today
             const today = new Date();
             document.getElementById('postDate').value = today.toISOString().split('T')[0];
@@ -551,30 +582,6 @@
             document.getElementById('postModal').style.display = 'none';
         }
 
-        function loadScheduledPosts() {
-            // Sample data
-            scheduledPosts = [
-                {
-                    id: 1,
-                    content: 'Добро пожаловать в нашу группу! Здесь вы найдете самые актуальные новости и полезную информацию.',
-                    group: 'Основная группа',
-                    date: '2025-06-15',
-                    time: '09:00',
-                    status: 'scheduled'
-                },
-                {
-                    id: 2,
-                    content: 'Специальная акция только сегодня! Скидка 30% на все товары.',
-                    group: 'Промо',
-                    date: '2025-06-16',
-                    time: '14:00',
-                    status: 'scheduled'
-                }
-            ];
-            
-            renderScheduledPosts();
-        }
-
         function renderScheduledPosts() {
             const postsList = document.getElementById('postsList');
             postsList.innerHTML = '';
@@ -604,34 +611,37 @@
             });
         }
 
-        document.getElementById('postForm').addEventListener('submit', function(e) {
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const content = document.getElementById('postContent').value;
             const group = document.getElementById('groupSelect').value;
             const date = document.getElementById('postDate').value;
             const time = document.getElementById('postTime').value;
-            
             if (!content.trim() || !group || !date || !time) {
                 alert('Пожалуйста, заполните все поля');
                 return;
             }
-            
-            const newPost = {
-                id: Date.now(),
-                content: content.trim(),
-                group: document.getElementById('groupSelect').options[document.getElementById('groupSelect').selectedIndex].text,
-                date: date,
-                time: time,
-                status: 'scheduled'
-            };
-            
-            scheduledPosts.push(newPost);
-            renderCalendar();
-            renderScheduledPosts();
-            clearForm();
-            
-            alert('Пост успешно запланирован!');
+            const scheduled_time = new Date(`${date}T${time}`).toISOString();
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content,
+                        channel_id: group,
+                        scheduled_time
+                    })
+                });
+                if (response.ok) {
+                    alert('Пост успешно запланирован!');
+                    loadScheduledPosts();
+                    clearForm();
+                } else {
+                    alert('Ошибка при создании поста');
+                }
+            } catch (error) {
+                alert('Ошибка при создании поста: ' + error);
+            }
         });
 
         function clearForm() {
