@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Bot - Автоматическая публикация постов</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
     <style>
         * {
             margin: 0;
@@ -721,6 +724,12 @@
                 </div>
             </div>
         </div>
+
+        <!-- Запланированные посты -->
+        <div style="margin-top: 30px;">
+            <h2 class="section-title">📝 Запланированные посты</h2>
+            <div id="scheduledPosts"></div>
+        </div>
     </div>
 
     <script>
@@ -833,6 +842,10 @@
                 const scheduledTime = prompt('Enter scheduled time (YYYY-MM-DD HH:mm):');
                 if (!scheduledTime) return;
                 
+                dayjs.extend(dayjs_plugin_utc);
+                dayjs.extend(dayjs_plugin_timezone);
+                const tallinnTime = dayjs.tz(scheduledTime, "YYYY-MM-DD HH:mm", "Europe/Tallinn");
+                const isoTallinn = tallinnTime.format("YYYY-MM-DDTHH:mm:ssZ");
                 const response = await fetch(`${API_BASE_URL}/posts`, {
                     method: 'POST',
                     headers: {
@@ -841,7 +854,7 @@
                     body: JSON.stringify({
                         content,
                         channel_id: channelId,
-                        scheduled_time: new Date(scheduledTime).toISOString()
+                        scheduled_time: isoTallinn
                     })
                 });
                 
@@ -904,9 +917,99 @@
             console.log(`${type}: ${message}`);
         }
         
-        // Initialize dashboard
+        // Загрузка и отображение запланированных постов
+        async function loadScheduledPosts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`);
+                const posts = await response.json();
+                renderScheduledPosts(posts);
+            } catch (error) {
+                console.error('Ошибка загрузки постов:', error);
+            }
+        }
+
+        function renderScheduledPosts(posts) {
+            const container = document.getElementById('scheduledPosts');
+            if (!posts.length) {
+                container.innerHTML = '<p>Нет запланированных постов</p>';
+                return;
+            }
+            container.innerHTML = posts.map(post => `
+                <div class="schedule-item">
+                    <div class="schedule-info">
+                        <div class="schedule-time">${dayjs(post.scheduled_time).format('DD.MM.YYYY HH:mm')}</div>
+                        <div class="schedule-details">
+                            <h4>${post.channel_name || post.channel_id}</h4>
+                            <p>${post.content}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="action-btn btn-warning" onclick="editPost(${post.id})">Редактировать</button>
+                        <button class="action-btn btn-secondary" onclick="deletePost(${post.id})">Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Удаление поста
+        async function deletePost(postId) {
+            if (!confirm('Удалить этот пост?')) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts/${postId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Пост удалён', 'success');
+                    loadScheduledPosts();
+                } else {
+                    throw new Error('Ошибка удаления');
+                }
+            } catch (error) {
+                showNotification('Ошибка удаления', 'error');
+            }
+        }
+
+        // Редактирование поста
+        async function editPost(postId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`);
+                const posts = await response.json();
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                const newContent = prompt('Измените текст поста:', post.content);
+                if (newContent === null) return;
+                const newChannelId = prompt('Измените ID канала:', post.channel_id);
+                if (newChannelId === null) return;
+                const newTime = prompt('Измените дату и время (YYYY-MM-DD HH:mm):', dayjs(post.scheduled_time).format('YYYY-MM-DD HH:mm'));
+                if (newTime === null) return;
+                dayjs.extend(dayjs_plugin_utc);
+                dayjs.extend(dayjs_plugin_timezone);
+                const tallinnTime = dayjs.tz(newTime, "YYYY-MM-DD HH:mm", "Europe/Tallinn");
+                const isoTallinn = tallinnTime.format("YYYY-MM-DDTHH:mm:ssZ");
+                const updateResp = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: newContent,
+                        channel_id: newChannelId,
+                        scheduled_time: isoTallinn,
+                        media_path: post.media_path,
+                        media_type: post.media_type
+                    })
+                });
+                if (updateResp.ok) {
+                    showNotification('Пост обновлён', 'success');
+                    loadScheduledPosts();
+                } else {
+                    throw new Error('Ошибка обновления');
+                }
+            } catch (error) {
+                showNotification('Ошибка обновления', 'error');
+            }
+        }
+
+        // Загружаем посты при инициализации
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
+            loadScheduledPosts();
         });
     </script>
 </body>

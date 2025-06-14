@@ -126,4 +126,24 @@ class Database:
         channels = [dict(zip(columns, row)) for row in cursor.fetchall()]
         
         conn.close()
-        return channels 
+        return channels
+
+    def delete_post(self, post_id: int) -> None:
+        """Delete a post by its ID."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM posts WHERE id = ?', (post_id,))
+        conn.commit()
+        conn.close()
+
+    def update_post(self, post_id: int, content: str, channel_id: str, scheduled_time: datetime, media_path: Optional[str] = None, media_type: Optional[str] = None) -> None:
+        """Update an existing post by its ID."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE posts
+            SET content = ?, channel_id = ?, scheduled_time = ?, media_path = ?, media_type = ?
+            WHERE id = ?
+        ''', (content, channel_id, scheduled_time, media_path, media_type, post_id))
+        conn.commit()
+        conn.close() 
