@@ -1,6 +1,7 @@
 import schedule
 import time
 import threading
+import asyncio
 from datetime import datetime
 import pytz
 from typing import Callable, Dict, List
@@ -20,6 +21,7 @@ class PostScheduler:
         self.posting_schedule = posting_schedule
         self.running = False
         self.scheduler_thread = None
+        self.loop = asyncio.new_event_loop()
 
     def start(self):
         """Start the scheduler in a separate thread."""
@@ -41,10 +43,11 @@ class PostScheduler:
 
     def _run_scheduler(self):
         """Main scheduler loop."""
+        asyncio.set_event_loop(self.loop)
         while self.running:
             try:
                 # Check for pending posts
-                self._process_pending_posts()
+                self.loop.run_until_complete(self._process_pending_posts())
                 
                 # Run scheduled tasks
                 schedule.run_pending()
@@ -55,12 +58,12 @@ class PostScheduler:
                 logger.error(f"Error in scheduler: {str(e)}")
                 time.sleep(60)  # Wait a minute before retrying
 
-    def _process_pending_posts(self):
+    async def _process_pending_posts(self):
         """Process all pending posts that are due for publishing."""
         try:
             pending_posts = self.db.get_pending_posts()
             for post in pending_posts:
-                self._publish_post(post)
+                await self._publish_post(post)
         except Exception as e:
             logger.error(f"Error processing pending posts: {str(e)}")
 
@@ -109,7 +112,7 @@ class PostScheduler:
             
             # Schedule the post
             schedule.every().day.at(scheduled_time.strftime('%H:%M')).do(
-                self._process_pending_posts
+                lambda: self.loop.run_until_complete(self._process_pending_posts())
             )
             
             logger.info(f"Scheduled post {post_id} for {scheduled_time}")

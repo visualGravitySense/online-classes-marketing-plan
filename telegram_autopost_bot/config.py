@@ -6,12 +6,20 @@ load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_ID = int(os.getenv('ADMIN_ID', 0))
 CHANNELS = {
-    'main': os.getenv('MAIN_CHANNEL_ID'),
-    'test': os.getenv('TEST_CHANNEL_ID'),
-    "digoGraphickDesign": {
-        "chat_id": "_PRbmgV8h95hOWRk",
-        "name": "digoGraphickDesign",
-        "active": True
+    'main': {
+        'chat_id': os.getenv('MAIN_CHANNEL_ID'),
+        'name': 'Main Channel',
+        'active': True
+    },
+    'test': {
+        'chat_id': os.getenv('TEST_CHANNEL_ID'),
+        'name': 'Test Channel',
+        'active': True
+    },
+    'digoGraphickDesign': {
+        'chat_id': os.getenv('DIGO_CHANNEL_ID', '-1001234567890'),  # Replace with actual channel ID
+        'name': 'digoGraphickDesign',
+        'active': True
     }
 }
 DATABASE_URL = os.getenv('DATABASE_URL', 'data/posts.db')
