@@ -4,10 +4,12 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List, Dict
 import json
+from aiogram import Bot
+
 from database import Database
 from scheduler import PostScheduler
-from aiogram import Bot
 from config import BOT_TOKEN, ADMIN_ID
+
 
 app = FastAPI()
 
@@ -100,8 +102,13 @@ async def get_posts():
     
     columns = [description[0] for description in cursor.description]
     posts = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
     conn.close()
+    # Преобразуем scheduled_time в ISO-формат с 'T'
+    for post in posts:
+        st = post.get('scheduled_time')
+        if st and isinstance(st, str) and ' ' in st:
+            # Преобразуем '2025-06-13 10:25:00+00:00' -> '2025-06-13T10:25:00+00:00'
+            post['scheduled_time'] = st.replace(' ', 'T', 1)
     return posts
 
 @app.post("/api/posts")
