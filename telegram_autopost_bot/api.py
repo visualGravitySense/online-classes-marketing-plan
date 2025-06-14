@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
@@ -162,6 +162,29 @@ async def stop_scheduler():
     try:
         scheduler.stop()
         return {"status": "success", "message": "Scheduler stopped"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/posts/{post_id}")
+async def delete_post(post_id: int = Path(..., description="ID поста для удаления")):
+    try:
+        db.delete_post(post_id)
+        return {"status": "success", "message": "Post deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.put("/api/posts/{post_id}")
+async def update_post(post_id: int, post: Post):
+    try:
+        db.update_post(
+            post_id=post_id,
+            content=post.content,
+            channel_id=post.channel_id,
+            scheduled_time=post.scheduled_time,
+            media_path=post.media_path,
+            media_type=post.media_type
+        )
+        return {"status": "success", "message": "Post updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
