@@ -344,6 +344,20 @@
                 font-size: 2rem;
             }
         }
+
+        .published-posts {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .post-item.published {
+            border-left: 4px solid #48bb78;
+        }
     </style>
 </head>
 <body>
@@ -415,6 +429,11 @@
                     <h3>📋 Запланированные посты</h3>
                     <div id="postsList"></div>
                 </div>
+
+                <div class="published-posts">
+                    <h3>📢 Опубликованные посты</h3>
+                    <div id="publishedPostsList"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -466,6 +485,7 @@
                     status: post.published ? 'published' : 'scheduled'
                 }));
                 renderScheduledPosts();
+                renderPublishedPosts();
                 renderCalendar();
             } catch (error) {
                 alert('Ошибка загрузки постов: ' + error);
@@ -608,6 +628,35 @@
                     </div>
                 `;
                 postsList.appendChild(postDiv);
+            });
+        }
+
+        function renderPublishedPosts() {
+            const publishedPostsList = document.getElementById('publishedPostsList');
+            publishedPostsList.innerHTML = '';
+            
+            const publishedPosts = scheduledPosts
+                .filter(post => post.status === 'published')
+                .sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time))
+                .slice(0, 5);
+            
+            if (publishedPosts.length === 0) {
+                publishedPostsList.innerHTML = '<p>Нет опубликованных постов</p>';
+                return;
+            }
+            
+            publishedPosts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post-item published';
+                postDiv.innerHTML = `
+                    <h4>${post.group}</h4>
+                    <p>${post.content.substring(0, 80)}${post.content.length > 80 ? '...' : ''}</p>
+                    <div class="post-meta">
+                        <span>${new Date(post.date).toLocaleDateString('ru-RU')} в ${post.time}</span>
+                        <span class="status published">Опубликовано</span>
+                    </div>
+                `;
+                publishedPostsList.appendChild(postDiv);
             });
         }
 
