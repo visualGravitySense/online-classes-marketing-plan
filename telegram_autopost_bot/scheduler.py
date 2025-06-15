@@ -20,43 +20,36 @@ class PostScheduler:
         self.bot = bot
         self.posting_schedule = posting_schedule
         self.running = False
-        self.scheduler_thread = None
-        self.loop = asyncio.new_event_loop()
+        self.task = None
 
-    def start(self):
-        """Start the scheduler in a separate thread."""
+    async def start(self):
+        """Start the scheduler in the main event loop."""
         if self.running:
             return
-
         self.running = True
-        self.scheduler_thread = threading.Thread(target=self._run_scheduler)
-        self.scheduler_thread.daemon = True
-        self.scheduler_thread.start()
+        self.task = asyncio.create_task(self._run_scheduler())
         logger.info("Scheduler started")
 
-    def stop(self):
+    async def stop(self):
         """Stop the scheduler."""
         self.running = False
-        if self.scheduler_thread:
-            self.scheduler_thread.join()
+        if self.task:
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
         logger.info("Scheduler stopped")
 
-    def _run_scheduler(self):
-        """Main scheduler loop."""
-        asyncio.set_event_loop(self.loop)
+    async def _run_scheduler(self):
+        """Main scheduler loop (async, runs in main event loop)."""
         while self.running:
             try:
-                # Check for pending posts
-                self.loop.run_until_complete(self._process_pending_posts())
-                
-                # Run scheduled tasks
-                schedule.run_pending()
-                
-                # Sleep for a minute
-                time.sleep(60)
+                await self._process_pending_posts()
+                await asyncio.sleep(60)  # Check every minute
             except Exception as e:
                 logger.error(f"Error in scheduler: {str(e)}")
-                time.sleep(60)  # Wait a minute before retrying
+                await asyncio.sleep(60)
 
     async def _process_pending_posts(self):
         """Process all pending posts that are due for publishing."""

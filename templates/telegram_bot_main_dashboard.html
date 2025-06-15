@@ -673,6 +673,7 @@
                     <div class="group-next-post">
                         Следующий пост: Сегодня в 15:30
                     </div>
+                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
                 </div>
 
                 <div class="group-card">
@@ -697,6 +698,7 @@
                     <div class="group-next-post">
                         Следующий пост: Сегодня в 16:00
                     </div>
+                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
                 </div>
 
                 <div class="group-card">
@@ -721,6 +723,7 @@
                     <div class="group-next-post">
                         Следующий пост: Сегодня в 18:00
                     </div>
+                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
                 </div>
             </div>
         </div>
@@ -800,33 +803,44 @@
         }
         
         // Update channels
+        function escapeHtmlAttr(str) {
+            return String(str).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+        }
+
         function updateChannels(channels) {
             const groupsGrid = document.querySelector('.groups-grid');
-            const channelCards = channels.map(channel => `
-                <div class="group-card">
-                    <div class="group-header">
-                        <div class="group-name">${channel.name}</div>
-                        <div class="group-status" style="background: ${channel.active ? '#c6f6d5' : '#fef5e7'}; color: ${channel.active ? '#22543d' : '#744210'}">
-                            ${channel.active ? 'Активна' : 'Ожидание'}
+            const channelCards = channels.map(channel => {
+                const channelNameEscaped = escapeHtmlAttr(channel.name);
+                return `
+                    <div class="group-card">
+                        <div class="group-header">
+                            <div class="group-name">${channel.name}</div>
+                            <div class="group-status" style="background: ${channel.active ? '#c6f6d5' : '#fef5e7'}; color: ${channel.active ? '#22543d' : '#744210'}">
+                                ${channel.active ? 'Активна' : 'Ожидание'}
+                            </div>
                         </div>
+                        <div class="group-stats">
+                            <div class="group-stat">
+                                <div class="group-stat-number">${channel.post_count || 0}</div>
+                                <div class="group-stat-label">Постов</div>
+                            </div>
+                            <div class="group-stat">
+                                <div class="group-stat-number">${channel.member_count || 0}</div>
+                                <div class="group-stat-label">Участники</div>
+                            </div>
+                            <div class="group-stat">
+                                <div class="group-stat-number">${channel.success_rate || 0}%</div>
+                                <div class="group-stat-label">Успешность</div>
+                            </div>
+                        </div>
+                        <div class="group-next-post">
+                            Следующий пост: ${channel.next_post_time || '—'}
+                        </div>
+                        <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${channelNameEscaped}')">Отправить тестовый пост</button>
+                        <button class="action-btn btn-warning" style="margin-top: 10px; width: 100%;" onclick="deleteChannel('${escapeHtmlAttr(channel.chat_id)}', '${channelNameEscaped}')">Удалить канал/группу</button>
                     </div>
-                    <div class="group-stats">
-                        <div class="group-stat">
-                            <div class="group-stat-number">${channel.post_count || 0}</div>
-                            <div class="group-stat-label">Постов</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">${channel.member_count || 0}</div>
-                            <div class="group-stat-label">Участники</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">${channel.success_rate || 0}%</div>
-                            <div class="group-stat-label">Успешность</div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
+                `;
+            }).join('');
             groupsGrid.innerHTML = channelCards;
         }
         
@@ -1011,6 +1025,43 @@
             loadDashboardData();
             loadScheduledPosts();
         });
+
+        async function sendTestPost(channelId, channelName) {
+            const content = prompt(`Введите текст тестового поста для "${channelName}" (оставьте пустым для стандартного):`, '');
+            try {
+                const response = await fetch(`${API_BASE_URL}/test_post`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_id: channelId, content: content || undefined })
+                });
+                if (response.ok) {
+                    showNotification('Тестовый пост отправлен!', 'success');
+                } else {
+                    const data = await response.json();
+                    showNotification('Ошибка: ' + (data.detail || 'Не удалось отправить тестовый пост'), 'error');
+                }
+            } catch (error) {
+                showNotification('Ошибка отправки тестового поста', 'error');
+            }
+        }
+
+        async function deleteChannel(channelId, channelName) {
+            if (!confirm(`Удалить канал/группу "${channelName}"? Это действие необратимо.`)) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showNotification('Канал/группа удалён(а)', 'success');
+                    await loadDashboardData();
+                } else {
+                    const data = await response.json();
+                    showNotification('Ошибка: ' + (data.detail || 'Не удалось удалить канал/группу'), 'error');
+                }
+            } catch (error) {
+                showNotification('Ошибка удаления канала/группы', 'error');
+            }
+        }
     </script>
 </body>
 </html>

@@ -17,8 +17,13 @@ CHANNELS = {
         'active': True
     },
     'digoGraphickDesign': {
-        'chat_id': os.getenv('DIGO_CHANNEL_ID', '-1001234567890'),  # Replace with actual channel ID
+        'chat_id': '-1002091962525',
         'name': 'digoGraphickDesign',
+        'active': True
+    },
+    'digoUI': {
+        'chat_id': '-1002123538949',
+        'name': 'digoUI',
         'active': True
     }
 }
