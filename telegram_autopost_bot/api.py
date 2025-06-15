@@ -40,6 +40,10 @@ class Channel(BaseModel):
     chat_id: str
     active: bool = True
 
+class TestPostRequest(BaseModel):
+    channel_id: str
+    content: Optional[str] = 'Тестовый пост!'
+
 # API Endpoints
 @app.get("/api/stats")
 async def get_stats():
@@ -185,6 +189,31 @@ async def update_post(post_id: int, post: Post):
             media_type=post.media_type
         )
         return {"status": "success", "message": "Post updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/test_post")
+async def send_test_post(req: TestPostRequest):
+    """Send a test post to a channel immediately."""
+    try:
+        await bot.send_message(chat_id=req.channel_id, text=req.content or 'Тестовый пост!')
+        return {"status": "success", "message": "Test post sent"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/channels/{chat_id}")
+async def delete_channel(chat_id: str):
+    try:
+        db.delete_channel(chat_id)
+        return {"status": "success", "message": "Channel deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/channels")
+async def delete_all_channels():
+    try:
+        db.delete_all_channels()
+        return {"status": "success", "message": "All channels deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -115,7 +115,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "content-folder/content-strategy.md",
+                "file": "Marketing plan.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -125,7 +125,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for content-strategy"
+              "title": "Backlinks for Marketing plan"
             }
           },
           {
@@ -134,12 +134,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "content-folder/content-strategy.md",
+                "file": "Marketing plan.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from content-strategy"
+              "title": "Outgoing links from Marketing plan"
             }
           },
           {
@@ -163,13 +163,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "content-folder/content-strategy.md",
+                "file": "Marketing plan.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of content-strategy"
+              "title": "Outline of Marketing plan"
             }
           }
         ]
@@ -189,11 +189,11 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "2d6ce8c859de8f51",
+  "active": "87e699108aeefe6b",
   "lastOpenFiles": [
+    "content-folder/content-strategy.md",
     "telegram_autopost_bot/data/posts.db-journal",
     "Marketing plan.md",
-    "content-folder/content-strategy.md",
     "community/telegram-marketing.md"
   ]
 }

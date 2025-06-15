@@ -165,7 +165,7 @@ Available commands:
         if message.from_user.id != ADMIN_ID:
             return
 
-        self.scheduler.stop()
+        await self.scheduler.stop()
         await message.reply("Autoposting has been paused.")
 
     async def resume_posting(self, message: types.Message):
@@ -173,13 +173,13 @@ Available commands:
         if message.from_user.id != ADMIN_ID:
             return
 
-        self.scheduler.start()
+        await self.scheduler.start()
         await message.reply("Autoposting has been resumed.")
 
     async def run(self):
         """Start the bot."""
         # Start the scheduler
-        self.scheduler.start()
+        await self.scheduler.start()
         
         # Start the bot
         await self.dp.start_polling(self.bot)

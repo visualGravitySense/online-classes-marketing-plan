@@ -146,4 +146,20 @@ class Database:
             WHERE id = ?
         ''', (content, channel_id, scheduled_time, media_path, media_type, post_id))
         conn.commit()
+        conn.close()
+
+    def delete_channel(self, chat_id: str) -> None:
+        """Delete a channel by its chat_id."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM channels WHERE chat_id = ?', (chat_id,))
+        conn.commit()
+        conn.close()
+
+    def delete_all_channels(self) -> None:
+        """Delete all channels from the database."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM channels')
+        conn.commit()
         conn.close() 
