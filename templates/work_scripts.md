@@ -47,3 +47,27 @@ venv\Scripts\activate
 ---
 
 **Если что-то не запускается или появляются ошибки — присылайте их сюда, помогу разобраться!**
+
+
+---
+
+
+Read file: telegram_autopost_bot/database.py
+```bash
+curl -X DELETE http://localhost:8000/api/channels
+```
+В PowerShell команда `curl` на самом деле вызывает `Invoke-WebRequest`, и параметры типа `-X` не поддерживаются напрямую.
+
+**Варианты:**
+1. Используйте `Invoke-RestMethod`:
+   ```powershell
+   Invoke-RestMethod -Uri "http://localhost:8000/api/channels" -Method Delete
+   ```
+2. Или выполните этот запрос через Postman, Insomnia, или любой HTTP-клиент.
+
+---
+
+**Результат:**  
+API для удаления всех каналов готов.  
+Выполните команду выше — и все каналы будут удалены из базы.
+
