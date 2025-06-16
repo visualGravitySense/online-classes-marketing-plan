@@ -72,12 +72,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "content-folder/about-course.md",
-                "mode": "source",
+                "file": "content-folder/auto-bot/UX UI Неделя 1.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "about-course"
+              "title": "UX UI Неделя 1"
             }
           },
           {
@@ -244,6 +244,9 @@
   },
   "active": "d36712f59c0fc397",
   "lastOpenFiles": [
+    "content-folder/auto-bot/UX UI Неделя 1.md",
+    "content-folder/about-course.md",
+    "content-folder/auto-bot",
     "gt-ignore/marketing_plan_presentation.html",
     "gt-ignore/Marketing plan.md",
     "gt-ignore/img/Pasted image 20250615164101.png",
@@ -268,14 +271,11 @@
     "content-folder/introduction",
     "content-folder/New folder",
     "img",
-    "New folder",
-    "content-folder/about-course.md",
     "🍕 Знакомство с проектом FoodFlow.md",
     "content-folder/ready-pdf/introduction.md",
     "about-teacher.md",
     "Что вы получите в результате курса.md",
     "content-folder/free-classes-content.md",
-    "content-folder/ready-pdf",
     "Обзор того, что будет сделано в рамках 3 уроков.md",
     "content-folder/about-course-video-images.md",
     "Marketing plan.md",
