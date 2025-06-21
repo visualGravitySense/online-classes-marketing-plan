@@ -1,14 +1,21 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for, flash
 from flask_cors import CORS
 import sqlite3
+import os
+from config import DATABASE_PATH, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
+from datetime import datetime, timedelta
+from functools import wraps
 
 # Создаем приложение Flask
 app = Flask(__name__)
-CORS(app)  # Разрешаем CORS для всех маршрутов
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Разрешаем CORS для всех API эндпоинтов
+
+# Устанавливаем секретный ключ для сессий
+app.config['SECRET_KEY'] = SECRET_KEY
 
 # Путь к базам данных
 POSTS_DB_PATH = 'data/posts.db'
-TELEGRAM_DB_PATH = 'telegram_autopost_bot/data/posts.db'
+TELEGRAM_DB_PATH = DATABASE_PATH
 
 def get_db_connection(db_path):
     """Создает соединение с базой данных."""
@@ -16,8 +23,22 @@ def get_db_connection(db_path):
     conn.row_factory = sqlite3.Row
     return conn
 
+# --- Декоратор для проверки аутентификации ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 def init_db():
     """Инициализирует базу данных, создавая необходимые таблицы, если они не существуют."""
+    # Убедимся, что директория 'data' существует
+    data_dir = os.path.dirname(TELEGRAM_DB_PATH)
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        
     conn_tg = get_db_connection(TELEGRAM_DB_PATH)
     # Создаем таблицу каналов, если ее нет
     conn_tg.execute('''
@@ -136,11 +157,34 @@ def init_db():
     conn_tg.commit()
     conn_tg.close()
 
+# --- Маршруты аутентификации ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            flash('Вы успешно вошли в систему!', 'success')
+            return redirect(url_for('owner_dashboard'))
+        else:
+            flash('Неверные учетные данные. Попробуйте еще раз.', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('Вы вышли из системы.', 'info')
+    return redirect(url_for('login'))
+
+# --- API эндпоинты ---
 @app.route('/')
-def index():
-    return "<h1>API Gateway for UX/UI Academy is running!</h1>"
+@login_required
+def owner_dashboard():
+    return render_template('owner_dashboard.html')
 
 @app.route('/api/owner/summary', methods=['GET'])
+@login_required
 def get_owner_summary():
     """
     Эндпоинт для главной панели владельца.
@@ -864,31 +908,37 @@ def delete_partner(partner_id):
 
 # --- Рендеринг страниц ---
 @app.route('/manage-courses')
+@login_required
 def manage_courses_page():
     """Открывает страницу управления курсами."""
     return render_template('manage_courses.html')
 
 @app.route('/financial-report')
+@login_required
 def financial_report_page():
     """Открывает страницу финансового отчета."""
     return render_template('financial_report.html')
 
 @app.route('/manage-team')
+@login_required
 def manage_team_page():
     """Открывает страницу управления командой."""
     return render_template('manage_team.html')
 
 @app.route('/manage-campaigns')
+@login_required
 def manage_campaigns_page():
     """Открывает страницу управления рекламными кампаниями."""
     return render_template('manage_campaigns.html')
 
 @app.route('/student-analytics')
+@login_required
 def student_analytics_page():
     """Открывает страницу аналитики студентов."""
     return render_template('student_analytics.html')
 
 @app.route('/partner-program')
+@login_required
 def partner_program_page():
     return render_template('partner_program.html')
 
