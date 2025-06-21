@@ -10,6 +10,9 @@ start "Telegram Bot" cmd /k "call venv\Scripts\activate.bat && cd telegram_autop
 REM Start the API server (run from telegram_autopost_bot directory with proper Python path)
 start "API Server" cmd /k "call venv\Scripts\activate.bat && cd telegram_autopost_bot && set PYTHONPATH=. && python -m uvicorn api:app --reload"
 
+REM Start the Main API Gateway
+start "Main API Gateway" cmd /k "call venv\Scripts\activate.bat && python main_api.py"
+
 REM Start the HTTP server
 start "HTTP Server" cmd /k "call venv\Scripts\activate.bat && python -m http.server 8080"
 
