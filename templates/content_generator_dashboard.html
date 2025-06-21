@@ -262,330 +262,173 @@
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🎨 Генератор контента</h1>
-            <p>Создавайте качественный контент для разных аудиторий автоматически</p>
+            <h1>✍️ Генератор Контента</h1>
+            <p>Создавайте, просматривайте и управляйте контентом для Telegram</p>
         </div>
 
         <div class="batch-controls">
-            <div class="panel-title">📊 Быстрая генерация пакетов</div>
+            <div class="panel-title">📊 Статистика</div>
             <div class="batch-grid">
-                <div class="batch-item" onclick="generateBatch('Новички в дизайне', 5)">
-                    <div class="batch-number">5</div>
-                    <div class="batch-label">Новички в дизайне</div>
+                <div class="batch-item">
+                    <div class="batch-number" id="postsInQueue">...</div>
+                    <div class="batch-label">Постов в очереди</div>
                 </div>
-                <div class="batch-item" onclick="generateBatch('Junior дизайнеры', 5)">
-                    <div class="batch-number">5</div>
-                    <div class="batch-label">Junior дизайнеры</div>
+                <div class="batch-item">
+                    <div class="batch-number" id="generatedToday">...</div>
+                    <div class="batch-label">Сгенерировано сегодня</div>
                 </div>
-                <div class="batch-item" onclick="generateBatch('Фрилансеры', 5)">
-                    <div class="batch-number">5</div>
-                    <div class="batch-label">Фрилансеры</div>
-                </div>
-                <div class="batch-item" onclick="generateBatch('Разработчики', 5)">
-                    <div class="batch-number">5</div>
-                    <div class="batch-label">Разработчики</div>
+                <div class="batch-item">
+                    <div class="batch-number" id="totalInDb">...</div>
+                    <div class="batch-label">Всего в базе</div>
                 </div>
             </div>
         </div>
 
         <div class="main-grid">
             <div class="generator-panel">
-                <div class="panel-title">⚙️ Настройки генерации</div>
-                
-                <div id="alertContainer"></div>
-                
-                <div class="form-group">
-                    <label class="form-label">🎯 Группа аудитории</label>
-                    <select class="form-select" id="audienceGroup">
-                        <option value="">Выберите аудиторию</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">📝 Тип контента</label>
-                    <select class="form-select" id="contentType">
-                        <option value="">Выберите тип</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">📢 Канал для публикации</label>
-                    <select class="form-select" id="channelId">
-                        <option value="">Выберите канал</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">📅 Время публикации (необязательно)</label>
-                    <input type="datetime-local" class="form-input" id="scheduledTime">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">💡 Дополнительный промпт (необязательно)</label>
-                    <textarea class="form-textarea" id="customPrompt" placeholder="Дополнительные указания для генерации..."></textarea>
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="generateContent()">
-                        🎨 Сгенерировать
-                    </button>
-                    <button class="btn btn-secondary" onclick="generateAndPublish()">
-                        🚀 Сгенерировать и опубликовать
-                    </button>
-                </div>
-
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>Генерируем контент...</p>
-                </div>
-            </div>
-
-            <div class="preview-panel">
-                <div class="panel-title">👁️ Предварительный просмотр</div>
-                <div id="previewContent">
-                    <div class="preview-content">
-                        Выберите параметры и нажмите "Сгенерировать" для создания контента
+                <div class="panel-title">⚙️ Параметры генерации</div>
+                <form id="generatorForm">
+                    <div class="form-group">
+                        <label for="templateSelect" class="form-label">Шаблон</label>
+                        <select id="templateSelect" class="form-select" disabled></select>
                     </div>
+                    <div class="form-group">
+                        <label for="themeSelect" class="form-label">Тема</label>
+                        <select id="themeSelect" class="form-select" disabled></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="audienceSelect" class="form-label">Целевая аудитория</label>
+                        <select id="audienceSelect" class="form-select" disabled></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customPrompt" class="form-label">Дополнительные инструкции (необязательно)</label>
+                        <textarea id="customPrompt" class="form-textarea" placeholder="Например: 'Сделай пост более формальным', 'Добавь emoji'"></textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            <span>🚀</span> Сгенерировать пост
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="preview-panel">
+                <div class="panel-title">👀 Предпросмотр</div>
+                <div id="alert-container"></div>
+                <div class="loading" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Магия в процессе... AI генерирует текст.</p>
+                </div>
+                <div class="preview-content" id="previewContent" style="display: none;">
+                    Здесь появится сгенерированный текст...
+                </div>
+                 <div class="btn-group" id="action-buttons" style="display: none;">
+                    <button id="saveButton" class="btn btn-secondary">
+                        <span>💾</span> Сохранить в базу
+                    </button>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
-        // Загрузка данных при инициализации
         document.addEventListener('DOMContentLoaded', function() {
-            loadAudiences();
-            loadContentTypes();
-            loadChannels();
+            loadDashboardData();
+            document.getElementById('generatorForm').addEventListener('submit', handleGeneration);
         });
 
-        async function loadAudiences() {
+        async function loadDashboardData() {
             try {
-                const response = await fetch('/api/content/audiences');
-                const data = await response.json();
-                const select = document.getElementById('audienceGroup');
+                const response = await fetch('http://127.0.0.1:5001/api/content/summary');
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 
-                data.audiences.forEach(audience => {
-                    const option = document.createElement('option');
-                    option.value = audience;
-                    option.textContent = audience;
-                    select.appendChild(option);
-                });
+                const data = await response.json();
+                
+                updateStats(data.stats);
+                updateSelects(data.options);
+
             } catch (error) {
-                console.error('Ошибка загрузки аудиторий:', error);
+                console.error('Failed to load dashboard data:', error);
+                showAlert(`Не удалось загрузить данные. ${error.message}`, 'error');
             }
         }
 
-        async function loadContentTypes() {
-            try {
-                const response = await fetch('/api/content/types');
-                const data = await response.json();
-                const select = document.getElementById('contentType');
-                
-                data.content_types.forEach(type => {
+        function updateStats(stats) {
+            document.getElementById('postsInQueue').textContent = stats.postsInQueue;
+            document.getElementById('generatedToday').textContent = stats.generatedToday;
+            document.getElementById('totalInDb').textContent = stats.totalInDb;
+        }
+
+        function updateSelects(options) {
+            populateSelect('templateSelect', options.templates);
+            populateSelect('themeSelect', options.themes);
+            populateSelect('audienceSelect', options.audiences);
+        }
+        
+        function populateSelect(selectId, optionsArray) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            if (optionsArray && optionsArray.length > 0) {
+                optionsArray.forEach(optionText => {
                     const option = document.createElement('option');
-                    option.value = type;
-                    option.textContent = type;
+                    option.value = optionText;
+                    option.textContent = optionText;
                     select.appendChild(option);
                 });
-            } catch (error) {
-                console.error('Ошибка загрузки типов контента:', error);
+                select.disabled = false;
+            } else {
+                const option = document.createElement('option');
+                option.textContent = 'Нет данных';
+                select.appendChild(option);
+                select.disabled = true;
             }
         }
 
-        async function loadChannels() {
-            try {
-                const response = await fetch('/api/channels');
-                const channels = await response.json();
-                const select = document.getElementById('channelId');
+        async function handleGeneration(event) {
+            event.preventDefault();
+            
+            const previewContent = document.getElementById('previewContent');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const actionButtons = document.getElementById('action-buttons');
+            
+            loadingSpinner.style.display = 'block';
+            previewContent.style.display = 'none';
+            actionButtons.style.display = 'none';
+            clearAlerts();
+            
+            // Симуляция задержки ответа от AI. 
+            // TODO: Заменить на реальный fetch запрос к API генерации.
+            setTimeout(() => {
+                loadingSpinner.style.display = 'none';
                 
-                channels.forEach(channel => {
-                    const option = document.createElement('option');
-                    option.value = channel.chat_id;
-                    option.textContent = channel.name;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Ошибка загрузки каналов:', error);
-            }
+                const theme = document.getElementById('themeSelect').value;
+                const audience = document.getElementById('audienceSelect').value;
+                
+                const mockResponse = `**Тема:** ${theme}\n**Аудитория:** ${audience}\n\n**Контент:**\n\nПривет, будущий дизайнер! 🚀\n\nДавайте разберемся, что такое UX и UI, и почему это важно.\n\n- **UX (User Experience)** - это то, КАК пользователь взаимодействует с продуктом. Удобно ли ему? Понятно ли? \n- **UI (User Interface)** - это то, КАК продукт выглядит. Кнопочки, цвета, шрифты.\n\nХороший продукт - это когда красивый UI помогает создать отличный UX!\n\n#UX #UI #Design #Beginner`;
+
+                previewContent.textContent = mockResponse;
+                previewContent.style.display = 'block';
+                actionButtons.style.display = 'flex';
+
+                showAlert('Контент успешно сгенерирован!', 'success');
+            }, 1500);
         }
 
         function showAlert(message, type = 'success') {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            
-            container.innerHTML = '';
-            container.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
+            const container = document.getElementById('alert-container');
+            container.innerHTML = ''; // Очищаем предыдущие сообщения
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            container.appendChild(alertDiv);
+
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+        
+        function clearAlerts() {
+            document.getElementById('alert-container').innerHTML = '';
         }
 
-        function showLoading(show = true) {
-            const loading = document.getElementById('loading');
-            loading.style.display = show ? 'block' : 'none';
-        }
-
-        async function generateContent() {
-            const audienceGroup = document.getElementById('audienceGroup').value;
-            const contentType = document.getElementById('contentType').value;
-            const customPrompt = document.getElementById('customPrompt').value;
-
-            if (!audienceGroup || !contentType) {
-                showAlert('Пожалуйста, выберите аудиторию и тип контента', 'error');
-                return;
-            }
-
-            showLoading(true);
-
-            try {
-                const response = await fetch('/api/content/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        audience_group: audienceGroup,
-                        content_type: contentType,
-                        channel_id: '', // Не требуется для генерации
-                        custom_prompt: customPrompt
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    displayPreview(data.content);
-                    showAlert('Контент успешно сгенерирован!');
-                } else {
-                    showAlert('Ошибка генерации контента', 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-                showAlert('Ошибка соединения с сервером', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function generateAndPublish() {
-            const audienceGroup = document.getElementById('audienceGroup').value;
-            const contentType = document.getElementById('contentType').value;
-            const channelId = document.getElementById('channelId').value;
-            const scheduledTime = document.getElementById('scheduledTime').value;
-            const customPrompt = document.getElementById('customPrompt').value;
-
-            if (!audienceGroup || !contentType || !channelId) {
-                showAlert('Пожалуйста, заполните все обязательные поля', 'error');
-                return;
-            }
-
-            showLoading(true);
-
-            try {
-                const requestData = {
-                    audience_group: audienceGroup,
-                    content_type: contentType,
-                    channel_id: channelId,
-                    custom_prompt: customPrompt
-                };
-
-                if (scheduledTime) {
-                    requestData.scheduled_time = new Date(scheduledTime).toISOString();
-                }
-
-                const response = await fetch('/api/content/publish', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData)
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    displayPreview(data.content);
-                    showAlert(`Контент опубликован! ID поста: ${data.post_id}`);
-                } else {
-                    showAlert('Ошибка публикации контента', 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-                showAlert('Ошибка соединения с сервером', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function generateBatch(audienceGroup, count) {
-            showLoading(true);
-
-            try {
-                // Генерируем несколько постов
-                const posts = [];
-                for (let i = 0; i < count; i++) {
-                    const response = await fetch('/api/content/generate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            audience_group: audienceGroup,
-                            content_type: getRandomContentType(),
-                            channel_id: '',
-                            custom_prompt: ''
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        posts.push(data.content);
-                    }
-                }
-
-                displayBatchPreview(posts, audienceGroup);
-                showAlert(`Сгенерировано ${posts.length} постов для ${audienceGroup}`);
-            } catch (error) {
-                console.error('Ошибка:', error);
-                showAlert('Ошибка генерации пакета', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function getRandomContentType() {
-            const types = ['Проблема', 'Решение', 'Преимущества курса', 'Кейс', 'Совет', 'Мотивация'];
-            return types[Math.floor(Math.random() * types.length)];
-        }
-
-        function displayPreview(content) {
-            const container = document.getElementById('previewContent');
-            container.innerHTML = `
-                <div class="preview-content">
-                    ${content}
-                </div>
-            `;
-        }
-
-        function displayBatchPreview(posts, audienceGroup) {
-            const container = document.getElementById('previewContent');
-            let html = `<h3>Пакет постов для "${audienceGroup}"</h3>`;
-            
-            posts.forEach((post, index) => {
-                html += `
-                    <div class="preview-content">
-                        <strong>Пост ${index + 1}:</strong>
-                        ${post}
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
     </script>
 </body>
 </html> 

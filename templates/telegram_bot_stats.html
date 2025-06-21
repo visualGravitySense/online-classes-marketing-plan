@@ -287,10 +287,10 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="container">
         <div class="header">
             <h1>📊 Статистика публикаций</h1>
-            <p>Автоматическая публикация постов в Telegram группах</p>
+            <p>Глубокий анализ эффективности автопостинга</p>
         </div>
 
         <div class="controls">
@@ -305,97 +305,41 @@
             <p>Загрузка данных...</p>
         </div>
 
-        <div class="stats-overview">
-            <div class="stat-card">
-                <div class="stat-number" id="totalPosts">1,247</div>
-                <div class="stat-label">Всего постов</div>
-                <div class="stat-change positive">+12% за неделю</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="activeGroups">23</div>
-                <div class="stat-label">Активных групп</div>
-                <div class="stat-change positive">+2 новые</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="scheduledPosts">156</div>
-                <div class="stat-label">Запланировано</div>
-                <div class="stat-change">сегодня</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="successRate">98%</div>
-                <div class="stat-label">Успешность</div>
-                <div class="stat-change positive">+0.5%</div>
-            </div>
+        <div class="stats-overview" id="stats-overview">
+            <!-- Карточки будут загружены динамически -->
         </div>
 
         <div class="charts-section">
             <div class="chart-container">
-                <div class="chart-title">📈 Публикации по дням</div>
-                <canvas id="postsChart"></canvas>
+                <h3 class="chart-title">📈 Динамика публикаций (30 дней)</h3>
+                <canvas id="publicationsTrendChart"></canvas>
             </div>
             <div class="chart-container">
-                <div class="chart-title">🎯 Статус публикаций</div>
-                <canvas id="statusChart"></canvas>
+                <h3 class="chart-title">📊 Распределение постов по каналам</h3>
+                <canvas id="postsByChannelChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="groups-table">
+            <h3 class="table-title">🗂️ Статистика по каналам</h3>
+            <div class="table-wrapper" style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название канала</th>
+                            <th>Chat ID</th>
+                            <th>Всего постов</th>
+                            <th>Опубликовано</th>
+                        </tr>
+                    </thead>
+                    <tbody id="channelsTableBody">
+                        <!-- Данные будут загружены динамически -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="groups-table">
-            <div class="table-title">📋 Статистика по группам</div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Группа</th>
-                        <th>Опубликовано</th>
-                        <th>Запланировано</th>
-                        <th>Успешность</th>
-                        <th>Статус</th>
-                        <th>Последняя публикация</th>
-                    </tr>
-                </thead>
-                <tbody id="groupsTableBody">
-                    <tr>
-                        <td>🎮 Gaming Community</td>
-                        <td>342</td>
-                        <td>45</td>
-                        <td>99%</td>
-                        <td><span class="status active">Активна</span></td>
-                        <td>2 часа назад</td>
-                    </tr>
-                    <tr>
-                        <td>💼 Business Hub</td>
-                        <td>287</td>
-                        <td>32</td>
-                        <td>97%</td>
-                        <td><span class="status active">Активна</span></td>
-                        <td>1 час назад</td>
-                    </tr>
-                    <tr>
-                        <td>🎨 Design Studio</td>
-                        <td>198</td>
-                        <td>28</td>
-                        <td>95%</td>
-                        <td><span class="status paused">Пауза</span></td>
-                        <td>5 часов назад</td>
-                    </tr>
-                    <tr>
-                        <td>📚 Study Group</td>
-                        <td>156</td>
-                        <td>21</td>
-                        <td>92%</td>
-                        <td><span class="status error">Ошибка</span></td>
-                        <td>1 день назад</td>
-                    </tr>
-                    <tr>
-                        <td>🍕 Food Lovers</td>
-                        <td>264</td>
-                        <td>30</td>
-                        <td>98%</td>
-                        <td><span class="status active">Активна</span></td>
-                        <td>30 минут назад</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
     <script>
@@ -404,7 +348,7 @@
         let channels = [];
 
         // Chart.js chart instances
-        let postsChart, statusChart;
+        let publicationsTrendChart, postsByChannelChart;
 
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
@@ -418,14 +362,15 @@
 
         async function loadStats() {
             try {
-                const response = await fetch(`${API_BASE_URL}/stats`);
-                const stats = await response.json();
-                document.getElementById('totalPosts').textContent = stats.total_posts;
-                document.getElementById('activeGroups').textContent = stats.active_channels;
-                document.getElementById('scheduledPosts').textContent = stats.total_posts - stats.published_posts - stats.failed_posts;
-                document.getElementById('successRate').textContent = `${stats.success_rate.toFixed(1)}%`;
+                const response = await fetch('http://127.0.0.1:5001/api/telegram/stats');
+                if (!response.ok) {
+                    throw new Error(`Ошибка сети: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                updateUI(data);
             } catch (error) {
-                console.error('Ошибка загрузки статистики:', error);
+                console.error("Не удалось загрузить статистику:", error);
+                displayError(error);
             }
         }
 
@@ -442,6 +387,120 @@
             } catch (error) {
                 console.error('Ошибка загрузки каналов/постов:', error);
             }
+        }
+
+        function updateUI(data) {
+            updateOverview(data.overview);
+            updateCharts(data.charts);
+            updateTable(data.channels_table);
+        }
+
+        function updateOverview(overview) {
+            const container = document.getElementById('stats-overview');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${overview.total_published}</div>
+                    <div class="stat-label">Всего публикаций</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${overview.avg_per_day}</div>
+                    <div class="stat-label">Среднее постов в день</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${overview.success_rate}%</div>
+                    <div class="stat-label">Процент успеха</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="font-size: 1.8rem;">${overview.most_active_channel}</div>
+                    <div class="stat-label">Самый активный канал</div>
+                </div>
+            `;
+        }
+        
+        function updateCharts(chartsData) {
+            initPublicationsTrendChart(chartsData.publications_trend);
+            initPostsByChannelChart(chartsData.posts_by_channel);
+        }
+        
+        function updateTable(channels) {
+            const tableBody = document.getElementById('channelsTableBody');
+            tableBody.innerHTML = ''; // Очистка
+            if (channels.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Каналы еще не добавлены или нет данных.</td></tr>';
+                return;
+            }
+            channels.forEach(channel => {
+                const row = `
+                    <tr>
+                        <td>${channel.id}</td>
+                        <td>${channel.name}</td>
+                        <td>${channel.chat_id}</td>
+                        <td>${channel.total_posts}</td>
+                        <td>${channel.published_posts}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+        
+        function displayError(error) {
+            const container = document.getElementById('container');
+            container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 20px;">
+                                       <h2>Ошибка загрузки данных</h2>
+                                       <p>Не удалось подключиться к API-серверу или получить статистику.</p>
+                                       <p style="color: #d9534f; margin-top: 15px; font-family: monospace;">${error}</p>
+                                   </div>`;
+        }
+        
+        // --- Функции инициализации графиков ---
+
+        function initPublicationsTrendChart(chartData) {
+            const ctx = document.getElementById('publicationsTrendChart').getContext('2d');
+            if(publicationsTrendChart) publicationsTrendChart.destroy();
+            publicationsTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Количество публикаций',
+                        data: chartData.data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true },
+                        x: { ticks: { autoSkip: true, maxTicksLimit: 15 } }
+                    }
+                }
+            });
+        }
+        
+        function initPostsByChannelChart(chartData) {
+            const ctx = document.getElementById('postsByChannelChart').getContext('2d');
+            if(postsByChannelChart) postsByChannelChart.destroy();
+            postsByChannelChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.data,
+                        backgroundColor: ['#667eea', '#764ba2', '#4facfe', '#00f2fe', '#11998e', '#38ef7d', '#ffc107', '#fd7e14'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } } }
+                }
+            });
         }
 
         function updateGroupsTable() {
@@ -464,80 +523,6 @@
                         <td>${lastPost}</td>
                     </tr>
                 `;
-            });
-        }
-
-        function updateCharts() {
-            // Posts by day of week
-            const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-            const publishedByDay = [0,0,0,0,0,0,0];
-            const scheduledByDay = [0,0,0,0,0,0,0];
-            posts.forEach(post => {
-                const d = new Date(post.scheduled_time);
-                const day = (d.getDay() + 6) % 7; // Monday=0
-                if (post.published) publishedByDay[day]++;
-                else scheduledByDay[day]++;
-            });
-            if (postsChart) postsChart.destroy();
-            const ctx1 = document.getElementById('postsChart').getContext('2d');
-            postsChart = new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: days,
-                    datasets: [{
-                        label: 'Опубликовано',
-                        data: publishedByDay,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Запланировано',
-                        data: scheduledByDay,
-                        borderColor: '#764ba2',
-                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.1)' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-            // Status chart
-            let published = 0, failed = 0, scheduled = 0;
-            posts.forEach(post => {
-                if (post.published) published++;
-                else if (post.error_message) failed++;
-                else scheduled++;
-            });
-            if (statusChart) statusChart.destroy();
-            const ctx2 = document.getElementById('statusChart').getContext('2d');
-            statusChart = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Успешно', 'Ошибка', 'В ожидании'],
-                    datasets: [{
-                        data: [published, failed, scheduled],
-                        backgroundColor: [
-                            '#10b981',
-                            '#ef4444',
-                            '#f59e0b'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } }
-                }
             });
         }
 

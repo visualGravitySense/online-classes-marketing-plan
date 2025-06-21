@@ -343,367 +343,194 @@
                 font-size: 2rem;
             }
         }
+
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 300px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.5s forwards;
+        }
+        .alert-success { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .alert-error { background: linear-gradient(135deg, #f56565, #c53030); }
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><span class="emoji">🤖</span> Telegram Bot Dashboard</h1>
-            <p>Управление каналами и автоматическая публикация постов</p>
+            <h1>📣 Управление Каналами</h1>
+            <p>Добавляйте, удаляйте и просматривайте каналы для публикаций</p>
         </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalChannels">0</div>
-                <div class="stat-label">Всего каналов</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="activeChannels">0</div>
-                <div class="stat-label">Активные каналы</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="scheduledPosts">0</div>
-                <div class="stat-label">Запланированные посты</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="publishedToday">0</div>
-                <div class="stat-label">Опубликовано сегодня</div>
-            </div>
-        </div>
-
         <div class="main-content">
             <div class="card">
-                <h2><span class="emoji">📢</span> Управление каналами</h2>
-                <form id="channelForm">
+                <h2>➕ Добавить новый канал</h2>
+                <form id="add-channel-form">
                     <div class="form-group">
-                        <label for="channelName">Название канала:</label>
-                        <input type="text" id="channelName" placeholder="Введите название канала" required>
+                        <label for="channel-name">Название канала</label>
+                        <input type="text" id="channel-name" placeholder="Например, 'UX/UI Academy'" required>
                     </div>
                     <div class="form-group">
-                        <label for="channelId">ID канала/группы:</label>
-                        <input type="text" id="channelId" placeholder="@channel_name или -100123456789" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="channelType">Тип:</label>
-                        <select id="channelType">
-                            <option value="channel">Канал</option>
-                            <option value="group">Группа</option>
-                        </select>
+                        <label for="channel-id">ID или @username канала</label>
+                        <input type="text" id="channel-id" placeholder="Например, -100123456789 или @design_news" required>
                     </div>
                     <button type="submit" class="btn">Добавить канал</button>
                 </form>
-
-                <div class="channels-list" id="channelsList">
-                    <!-- Каналы будут добавлены динамически -->
-                </div>
             </div>
-
             <div class="card">
-                <h2><span class="emoji">📝</span> Создание поста</h2>
-                <form id="postForm">
-                    <div class="form-group">
-                        <label for="postContent">Содержимое поста:</label>
-                        <textarea id="postContent" placeholder="Введите текст поста..." required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="postChannels">Выберите каналы:</label>
-                        <select id="postChannels" multiple style="height: 120px;">
-                            <!-- Опции будут добавлены динамически -->
-                        </select>
-                    </div>
-                    <div class="datetime-group">
-                        <div class="form-group">
-                            <label for="postDate">Дата публикации:</label>
-                            <input type="date" id="postDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="postTime">Время публикации:</label>
-                            <input type="time" id="postTime" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="postImage">Изображение (URL):</label>
-                        <input type="url" id="postImage" placeholder="https://example.com/image.jpg">
-                    </div>
-                    <button type="submit" class="btn">Запланировать пост</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2><span class="emoji">⏰</span> Очередь постов</h2>
-            <div class="posts-queue" id="postsQueue">
-                <!-- Посты будут добавлены динамически -->
+                <h2>📚 Список подключенных каналов</h2>
+                <div id="channels-list" class="channels-list">
+                    <!-- Список каналов будет загружен сюда -->
+                </div>
             </div>
         </div>
     </div>
 
-    <button class="floating-btn" onclick="refreshData()" title="Обновить данные">
-        <span class="emoji">🔄</span>
-    </button>
+    <div id="alert-container"></div>
 
-    <!-- Модальное окно для редактирования -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Редактировать канал</h2>
-            <form id="editChannelForm">
-                <div class="form-group">
-                    <label for="editChannelName">Название канала:</label>
-                    <input type="text" id="editChannelName" required>
-                </div>
-                <div class="form-group">
-                    <label for="editChannelId">ID канала:</label>
-                    <input type="text" id="editChannelId" required>
-                </div>
-                <div class="form-group">
-                    <label for="editChannelType">Тип:</label>
-                    <select id="editChannelType">
-                        <option value="channel">Канал</option>
-                        <option value="group">Группа</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn">Сохранить изменения</button>
-            </form>
-        </div>
-    </div>
+    <style>
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 300px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.5s forwards;
+        }
+        .alert-success { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .alert-error { background: linear-gradient(135deg, #f56565, #c53030); }
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
 
     <script>
-        const API_BASE_URL = 'http://localhost:8000/api';
-        let channels = [];
-        let posts = [];
-        let currentEditingChannel = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'http://127.0.0.1:5001/api/telegram/groups';
+            const channelsList = document.getElementById('channels-list');
+            const addChannelForm = document.getElementById('add-channel-form');
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadChannels();
-            loadPosts();
-            setupEventListeners();
-            updateUI();
-            setDefaultDateTime();
-        });
-
-        async function loadChannels() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/channels`);
-                channels = await response.json();
-                updateUI();
-            } catch (error) {
-                showNotification('Ошибка загрузки каналов: ' + error);
-            }
-        }
-
-        async function loadPosts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/posts`);
-                const data = await response.json();
-                // Transform posts to match UI
-                posts = data.map(post => ({
-                    id: post.id,
-                    content: post.content,
-                    channels: [post.channel_name || post.channel_id],
-                    dateTime: post.scheduled_time.replace('T', ' ').slice(0, 16),
-                    image: post.media_path || '',
-                    status: post.published ? 'published' : 'scheduled'
-                }));
-                updateUI();
-            } catch (error) {
-                showNotification('Ошибка загрузки постов: ' + error);
-            }
-        }
-
-        function setupEventListeners() {
-            document.getElementById('channelForm').addEventListener('submit', handleChannelSubmit);
-            document.getElementById('postForm').addEventListener('submit', handlePostSubmit);
-            document.getElementById('editChannelForm').addEventListener('submit', handleEditChannelSubmit);
-        }
-
-        async function handleChannelSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('channelName').value;
-            const channelId = document.getElementById('channelId').value;
-            // const type = document.getElementById('channelType').value; // Not used in backend
-            try {
-                const response = await fetch(`${API_BASE_URL}/channels`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, chat_id: channelId })
-                });
-                if (response.ok) {
-                    showNotification('Канал успешно добавлен!');
-                    document.getElementById('channelForm').reset();
-                    loadChannels();
-                } else {
-                    showNotification('Ошибка при добавлении канала');
-                }
-            } catch (error) {
-                showNotification('Ошибка при добавлении канала: ' + error);
-            }
-        }
-
-        async function handlePostSubmit(e) {
-            e.preventDefault();
-            const content = document.getElementById('postContent').value;
-            const selectedChannels = Array.from(document.getElementById('postChannels').selectedOptions).map(option => option.value);
-            const date = document.getElementById('postDate').value;
-            const time = document.getElementById('postTime').value;
-            const image = document.getElementById('postImage').value;
-            if (selectedChannels.length === 0) {
-                alert('Выберите хотя бы один канал для публикации');
-                return;
-            }
-            for (const channel_id of selectedChannels) {
-                const scheduled_time = new Date(`${date}T${time}`).toISOString();
+            async function loadChannels() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/posts`, {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('Failed to fetch channels');
+                    const channels = await response.json();
+                    
+                    channelsList.innerHTML = '';
+                    if (channels.length === 0) {
+                        channelsList.innerHTML = '<p style="text-align: center; color: #666;">Нет подключенных каналов.</p>';
+                        return;
+                    }
+
+                    channels.forEach(channel => {
+                        const div = document.createElement('div');
+                        div.className = 'channel-item';
+                        div.innerHTML = `
+                            <div class="channel-name">${channel.name}</div>
+                            <div class="channel-id">ID: ${channel.chat_id}</div>
+                            <div class="channel-actions">
+                                <button class="btn btn-small btn-secondary" onclick="deleteChannel(${channel.id})">Удалить</button>
+                            </div>
+                        `;
+                        channelsList.appendChild(div);
+                    });
+                } catch (error) {
+                    showAlert(`Ошибка загрузки каналов: ${error.message}`, 'error');
+                }
+            }
+
+            addChannelForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const nameInput = document.getElementById('channel-name');
+                const idInput = document.getElementById('channel-id');
+
+                const data = {
+                    name: nameInput.value,
+                    chat_id: idInput.value
+                };
+
+                try {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            content,
-                            channel_id,
-                            scheduled_time,
-                            media_path: image ? image : undefined,
-                            media_type: image ? 'photo' : undefined
-                        })
+                        body: JSON.stringify(data)
                     });
-                    if (!response.ok) {
-                        showNotification('Ошибка при создании поста');
-                    }
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Failed to add channel');
+
+                    showAlert('Канал успешно добавлен!', 'success');
+                    nameInput.value = '';
+                    idInput.value = '';
+                    loadChannels();
                 } catch (error) {
-                    showNotification('Ошибка при создании поста: ' + error);
+                    showAlert(`Ошибка добавления: ${error.message}`, 'error');
                 }
+            });
+
+            window.deleteChannel = async (id) => {
+                if (!confirm('Вы уверены, что хотите удалить этот канал?')) return;
+                
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Failed to delete channel');
+
+                    showAlert('Канал успешно удален!', 'success');
+                    loadChannels();
+                } catch (error) {
+                    showAlert(`Ошибка удаления: ${error.message}`, 'error');
+                }
+            };
+            
+            function showAlert(message, type = 'success') {
+                const container = document.getElementById('alert-container');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.textContent = message;
+                container.appendChild(alertDiv);
+                setTimeout(() => {
+                    alertDiv.style.animation = 'slideOut 0.5s forwards';
+                    setTimeout(() => alertDiv.remove(), 500);
+                }, 4000);
             }
-            showNotification('Пост(ы) запланирован(ы)!');
-            document.getElementById('postForm').reset();
-            setDefaultDateTime();
-            loadPosts();
-        }
+            // Добавим анимацию для исчезновения
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }`;
+            document.head.appendChild(style);
 
-        function handleEditChannelSubmit(e) {
-            e.preventDefault();
-            // Not implemented: backend does not support channel editing
-            showNotification('Редактирование каналов не поддерживается API');
-            closeModal();
-        }
 
-        function updateUI() {
-            updateStats();
-            updateChannelsList();
-            updateChannelOptions();
-            updatePostsQueue();
-        }
-
-        function updateStats() {
-            document.getElementById('totalChannels').textContent = channels.length;
-            document.getElementById('activeChannels').textContent = channels.filter(c => c.active !== false).length;
-            document.getElementById('scheduledPosts').textContent = posts.filter(p => p.status === 'scheduled').length;
-            document.getElementById('publishedToday').textContent = posts.filter(p => p.status === 'published' && p.dateTime.startsWith(new Date().toISOString().slice(0,10))).length;
-        }
-
-        function updateChannelsList() {
-            const container = document.getElementById('channelsList');
-            container.innerHTML = '';
-            channels.forEach(channel => {
-                const channelDiv = document.createElement('div');
-                channelDiv.className = 'channel-item';
-                channelDiv.innerHTML = `
-                    <div class="channel-name">
-                        <span class="status-indicator ${channel.active !== false ? 'status-active' : 'status-inactive'}"></span>
-                        ${channel.name}
-                    </div>
-                    <div class="channel-id">${channel.chat_id}</div>
-                `;
-                container.appendChild(channelDiv);
-            });
-        }
-
-        function updateChannelOptions() {
-            const select = document.getElementById('postChannels');
-            select.innerHTML = '';
-            channels.filter(c => c.active !== false).forEach(channel => {
-                const option = document.createElement('option');
-                option.value = channel.chat_id;
-                option.textContent = channel.name;
-                select.appendChild(option);
-            });
-        }
-
-        function updatePostsQueue() {
-            const container = document.getElementById('postsQueue');
-            container.innerHTML = '';
-            posts.forEach(post => {
-                const postDiv = document.createElement('div');
-                postDiv.className = 'post-item';
-                postDiv.innerHTML = `
-                    <div class="post-content">${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</div>
-                    <div class="post-schedule">📅 ${post.dateTime}</div>
-                    <div class="post-channels">📢 ${post.channels.join(', ')}</div>
-                `;
-                container.appendChild(postDiv);
-            });
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').style.display = 'none';
-            currentEditingChannel = null;
-        }
-
-        function refreshData() {
-            const btn = document.querySelector('.floating-btn');
-            btn.style.transform = 'rotate(360deg) scale(1.1)';
-            setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 500);
             loadChannels();
-            loadPosts();
-            showNotification('Данные обновлены');
-        }
-
-        function setDefaultDateTime() {
-            const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const dateStr = tomorrow.toISOString().split('T')[0];
-            const timeStr = '10:00';
-            document.getElementById('postDate').value = dateStr;
-            document.getElementById('postTime').value = timeStr;
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #4CAF50, #45a049);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                z-index: 1001;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
+        });
     </script>
 </body>
 </html>

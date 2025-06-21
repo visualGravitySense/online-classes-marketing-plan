@@ -101,16 +101,24 @@
             font-size: 1.1rem;
         }
 
-        .status-indicator {
+        .status-indicator, .status-indicator-offline {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 15px 25px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
             border-radius: 50px;
             font-weight: 600;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .status-indicator {
+            background: linear-gradient(135deg, #48bb78, #38a169);
             animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .status-indicator-offline {
+            background: linear-gradient(135deg, #f56565, #c53030);
         }
 
         @keyframes glow {
@@ -118,12 +126,20 @@
             to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
         }
 
-        .status-dot {
+        .status-dot, .status-dot-offline {
             width: 12px;
             height: 12px;
-            background: white;
             border-radius: 50%;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .status-dot {
+            background: white;
             animation: blink 1s infinite;
+        }
+
+        .status-dot-offline {
+            background: #fefcbf;
         }
 
         @keyframes blink {
@@ -184,14 +200,27 @@
             letter-spacing: 1px;
         }
 
-        .activity-feed {
+        .activity-feed, .charts-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-feed {
             max-height: 400px;
             overflow-y: auto;
+        }
+        
+        .charts-section {
+             display: flex;
+             flex-direction: column;
+        }
+
+        .chart-container {
+            flex-grow: 1;
+            position: relative;
         }
 
         .section-title {
@@ -248,138 +277,19 @@
 
         .activity-time {
             font-size: 0.8rem;
-            color: #666;
-        }
-
-        .charts-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .chart-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        }
-
-        .schedule-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        }
-
-        .schedule-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .schedule-item:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
-        }
-
-        .schedule-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .schedule-time {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .schedule-details h4 {
-            color: #2d3748;
-            margin-bottom: 3px;
-        }
-
-        .schedule-details p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .schedule-status {
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .schedule-status.active {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .schedule-status.pending {
-            background: #fef5e7;
-            color: #744210;
+            color: #718096;
         }
 
         .quick-actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
 
-        .action-btn {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
+        .action-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #4ecdc4, #44a08d);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(78, 205, 196, 0.3);
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            color: white;
-        }
-
-        .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(237, 137, 54, 0.3);
         }
 
         .groups-grid {
@@ -501,567 +411,236 @@
     <div class="loading-animation" id="loadingBar"></div>
     
     <div class="dashboard">
-        <!-- Заголовок -->
         <div class="header">
             <div class="header-content">
                 <div class="logo-section">
                     <div class="logo">🤖</div>
                     <div class="header-text">
-                        <h1>Telegram Bot Dashboard</h1>
-                        <p>Автоматическая публикация постов по расписанию</p>
+                        <h1>Главная панель Telegram Бота</h1>
+                        <p>Обзор и управление активностью</p>
                     </div>
                 </div>
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    <span>Система активна</span>
+                <div id="status-indicator" class="status-indicator">
+                    <div id="status-dot" class="status-dot"></div>
+                    <span id="status-text">Бот в сети</span>
                 </div>
             </div>
         </div>
 
-        <!-- Быстрые действия -->
-        <div class="quick-actions">
-            <button class="action-btn btn-primary" onclick="createPost()">
-                ➕ Создать пост
-            </button>
-            <button class="action-btn btn-secondary" onclick="manageSchedule()">
-                📅 Управление расписанием
-            </button>
-            <button class="action-btn btn-warning" onclick="viewLogs()">
-                📋 Журнал событий
-            </button>
-            <button class="action-btn btn-primary" onclick="refreshDashboard()">
-                🔄 Обновить
-            </button>
-        </div>
-
-        <!-- Основная сетка -->
         <div class="main-grid">
-            <!-- Общая статистика -->
             <div class="stats-overview">
-                <h2 class="section-title">📊 Общая статистика</h2>
+                <div class="section-title">
+                    <span>📊</span> Общая статистика
+                </div>
                 <div class="stats-grid">
                     <div class="stat-item posts">
-                        <div class="stat-number" id="totalPosts">1,247</div>
+                        <div id="total-posts" class="stat-number">1,284</div>
                         <div class="stat-label">Всего постов</div>
                     </div>
                     <div class="stat-item groups">
-                        <div class="stat-number" id="activeGroups">12</div>
-                        <div class="stat-label">Активных групп</div>
+                        <div id="total-groups" class="stat-number">4</div>
+                        <div class="stat-label">Подключено групп</div>
                     </div>
                     <div class="stat-item success">
-                        <div class="stat-number" id="successRate">98.5%</div>
-                        <div class="stat-label">Успешность</div>
+                        <div id="published-posts" class="stat-number">972</div>
+                        <div class="stat-label">Опубликовано</div>
                     </div>
                     <div class="stat-item pending">
-                        <div class="stat-number" id="pendingPosts">23</div>
+                        <div id="pending-posts" class="stat-number">312</div>
                         <div class="stat-label">В очереди</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Лента активности -->
             <div class="activity-feed">
-                <h2 class="section-title">📈 Последняя активность</h2>
-                <div class="activity-item">
-                    <div class="activity-icon success">✓</div>
-                    <div class="activity-content">
-                        <div class="activity-text">Пост опубликован в "Технические новости"</div>
-                        <div class="activity-time">2 минуты назад</div>
+                <h2 class="section-title">
+                    <span>📢</span> Лента активности
+                </h2>
+                <div id="activity-feed-list">
+                    <div class="activity-item">
+                        <div class="activity-icon success">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Пост в "UX/UI Academy" успешно опубликован.</div>
+                            <div class="activity-time">2 минуты назад</div>
+                        </div>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon info">📅</div>
-                    <div class="activity-content">
-                        <div class="activity-text">Запланирован пост на 15:30 в "Бизнес канал"</div>
-                        <div class="activity-time">5 минут назад</div>
+                     <div class="activity-item">
+                        <div class="activity-icon info">ℹ️</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Запланирован новый пост в "Design News".</div>
+                            <div class="activity-time">1 час назад</div>
+                        </div>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon success">✓</div>
-                    <div class="activity-content">
-                        <div class="activity-text">Пост опубликован в "Лайфстайл"</div>
-                        <div class="activity-time">12 минут назад</div>
+                     <div class="activity-item">
+                        <div class="activity-icon error">❌</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Ошибка публикации в "Test Channel": неверный chat_id.</div>
+                            <div class="activity-time">3 часа назад</div>
+                        </div>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon warning">⚠</div>
-                    <div class="activity-content">
-                        <div class="activity-text">Задержка публикации в "IT сообщество"</div>
-                        <div class="activity-time">18 минут назад</div>
+                     <div class="activity-item">
+                        <div class="activity-icon success">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Пост в "UX/UI Academy" успешно опубликован.</div>
+                            <div class="activity-time">5 часов назад</div>
+                        </div>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon success">✓</div>
-                    <div class="activity-content">
-                        <div class="activity-text">Пост опубликован в "Новости дня"</div>
-                        <div class="activity-time">25 минут назад</div>
+                     <div class="activity-item">
+                        <div class="activity-icon info">ℹ️</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Бот успешно перезапущен.</div>
+                            <div class="activity-time">8 часов назад</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Графики -->
-        <div class="charts-section">
-            <div class="chart-container">
-                <h2 class="section-title">📈 Статистика публикаций за неделю</h2>
-                <canvas id="weeklyChart"></canvas>
+        <div class="bottom-grid">
+             <div class="charts-section">
+                 <h2 class="section-title">
+                    <span>📈</span> Статистика публикаций за неделю
+                </h2>
+                <div class="chart-container">
+                    <canvas id="publicationsChart"></canvas>
+                </div>
             </div>
-            <div class="chart-container">
-                <h2 class="section-title">🎯 Распределение по группам</h2>
-                <canvas id="groupsChart"></canvas>
-            </div>
-        </div>
 
-        <!-- Расписание -->
-        <div class="schedule-section">
-            <h2 class="section-title">⏰ Ближайшие публикации</h2>
-            <div class="schedule-item">
-                <div class="schedule-info">
-                    <div class="schedule-time">15:30</div>
-                    <div class="schedule-details">
-                        <h4>Технические новости</h4>
-                        <p>Обзор новых технологий в IT</p>
-                    </div>
-                </div>
-                <div class="schedule-status active">Готов</div>
-            </div>
-            <div class="schedule-item">
-                <div class="schedule-info">
-                    <div class="schedule-time">16:00</div>
-                    <div class="schedule-details">
-                        <h4>Бизнес канал</h4>
-                        <p>Еженедельный обзор рынка</p>
-                    </div>
-                </div>
-                <div class="schedule-status pending">Ожидание</div>
-            </div>
-            <div class="schedule-item">
-                <div class="schedule-info">
-                    <div class="schedule-time">18:00</div>
-                    <div class="schedule-details">
-                        <h4>Лайфстайл</h4>
-                        <p>Советы по здоровому образу жизни</p>
-                    </div>
-                </div>
-                <div class="schedule-status active">Готов</div>
-            </div>
-        </div>
-
-        <!-- Карточки групп -->
-        <div style="margin-top: 30px;">
-            <h2 class="section-title">👥 Активные группы</h2>
-            <div class="groups-grid">
-                <div class="group-card">
-                    <div class="group-header">
-                        <div class="group-name">Технические новости</div>
-                        <div class="group-status" style="background: #c6f6d5; color: #22543d;">Активна</div>
-                    </div>
-                    <div class="group-stats">
-                        <div class="group-stat">
-                            <div class="group-stat-number">89</div>
-                            <div class="group-stat-label">Постов</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">1.2K</div>
-                            <div class="group-stat-label">Участники</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">95%</div>
-                            <div class="group-stat-label">Успешность</div>
-                        </div>
-                    </div>
-                    <div class="group-next-post">
-                        Следующий пост: Сегодня в 15:30
-                    </div>
-                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
-                </div>
-
-                <div class="group-card">
-                    <div class="group-header">
-                        <div class="group-name">Бизнес канал</div>
-                        <div class="group-status" style="background: #c6f6d5; color: #22543d;">Активна</div>
-                    </div>
-                    <div class="group-stats">
-                        <div class="group-stat">
-                            <div class="group-stat-number">67</div>
-                            <div class="group-stat-label">Постов</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">856</div>
-                            <div class="group-stat-label">Участники</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">92%</div>
-                            <div class="group-stat-label">Успешность</div>
-                        </div>
-                    </div>
-                    <div class="group-next-post">
-                        Следующий пост: Сегодня в 16:00
-                    </div>
-                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
-                </div>
-
-                <div class="group-card">
-                    <div class="group-header">
-                        <div class="group-name">Лайфстайл</div>
-                        <div class="group-status" style="background: #fef5e7; color: #744210;">Ожидание</div>
-                    </div>
-                    <div class="group-stats">
-                        <div class="group-stat">
-                            <div class="group-stat-number">45</div>
-                            <div class="group-stat-label">Постов</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">2.1K</div>
-                            <div class="group-stat-label">Участники</div>
-                        </div>
-                        <div class="group-stat">
-                            <div class="group-stat-number">88%</div>
-                            <div class="group-stat-label">Успешность</div>
-                        </div>
-                    </div>
-                    <div class="group-next-post">
-                        Следующий пост: Сегодня в 18:00
-                    </div>
-                    <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${escapeHtmlAttr(channel.name)}')">Отправить тестовый пост</button>
+            <div class="quick-actions">
+                 <h2 class="section-title">
+                    <span>⚡</span> Быстрые действия
+                </h2>
+                <div class="action-buttons">
+                    <button class="action-button">
+                        <span>🔄</span> Перезапустить бота
+                    </button>
+                     <button class="action-button">
+                        <span>➕</span> Добавить группу
+                    </button>
+                     <button class="action-button">
+                        <span>-</span> Удалить группу
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Запланированные посты -->
-        <div style="margin-top: 30px;">
-            <h2 class="section-title">📝 Запланированные посты</h2>
-            <div id="scheduledPosts"></div>
         </div>
     </div>
-
+    
     <script>
-        const API_BASE_URL = 'http://localhost:8000/api';
-        
-        // Initialize charts
-        let weeklyChart, groupsChart;
-        
-        // Load data from API
+    document.addEventListener('DOMContentLoaded', () => {
+        let publicationsChart;
+
+        const iconMap = {
+            success: '✅',
+            info: 'ℹ️',
+            error: '❌',
+            warning: '⚠️'
+        };
+
         async function loadDashboardData() {
             try {
-                // Load statistics
-                const statsResponse = await fetch(`${API_BASE_URL}/stats`);
-                const stats = await statsResponse.json();
-                updateStats(stats);
+                const response = await fetch('http://127.0.0.1:5001/api/telegram/main_summary');
+                if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
+                const data = await response.json();
                 
-                // Load activity feed
-                const activityResponse = await fetch(`${API_BASE_URL}/activity`);
-                const activities = await activityResponse.json();
-                updateActivityFeed(activities);
-                
-                // Load channels
-                const channelsResponse = await fetch(`${API_BASE_URL}/channels`);
-                const channels = await channelsResponse.json();
-                updateChannels(channels);
-                
-                // Initialize charts
-                initCharts();
-                
+                updateStatus(data.bot_status);
+                updateStats(data.stats);
+                updateActivityFeed(data.recent_activities);
+                renderChart(data.charts.publications);
+
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                showNotification('Error loading dashboard data', 'error');
+                console.error("Failed to load main dashboard data:", error);
+                const body = document.querySelector('.dashboard');
+                body.innerHTML = `<div style="color: white; text-align: center; padding: 50px; background: rgba(0,0,0,0.3); border-radius: 20px;"><h2>Ошибка загрузки данных.</h2><p>${error.message}</p><p>Убедитесь, что API сервер (main_api.py) запущен.</p></div>`;
             }
         }
-        
-        // Update statistics
+
+        function updateStatus(status) {
+            const indicator = document.getElementById('status-indicator');
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (indicator) {
+                indicator.className = status.online ? 'status-indicator' : 'status-indicator-offline';
+            }
+            if (dot) {
+                dot.className = status.online ? 'status-dot' : 'status-dot-offline';
+            }
+            if (text) {
+                text.textContent = status.message;
+            }
+        }
+
         function updateStats(stats) {
-            document.getElementById('totalPosts').textContent = stats.total_posts;
-            document.getElementById('activeGroups').textContent = stats.active_channels;
-            document.getElementById('successRate').textContent = `${stats.success_rate.toFixed(1)}%`;
-            document.getElementById('pendingPosts').textContent = 
-                stats.total_posts - stats.published_posts - stats.failed_posts;
+            document.getElementById('total-posts').textContent = stats.total_posts;
+            document.getElementById('total-groups').textContent = stats.total_groups;
+            document.getElementById('published-posts').textContent = stats.published_posts;
+            document.getElementById('pending-posts').textContent = stats.pending_posts;
         }
-        
-        // Update activity feed
+
         function updateActivityFeed(activities) {
-            const activityFeed = document.querySelector('.activity-feed');
-            const activityItems = activities.map(activity => {
-                const status = activity.error_message ? 'error' : 'success';
-                const icon = activity.error_message ? '⚠' : '✓';
-                const time = new Date(activity.scheduled_time).toLocaleString();
-                
-                return `
-                    <div class="activity-item">
-                        <div class="activity-icon ${status}">${icon}</div>
-                        <div class="activity-content">
-                            <div class="activity-text">${activity.content.substring(0, 100)}...</div>
-                            <div class="activity-time">${time}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            activityFeed.innerHTML = `
-                <h2 class="section-title">📈 Последняя активность</h2>
-                ${activityItems}
-            `;
-        }
-        
-        // Update channels
-        function escapeHtmlAttr(str) {
-            return String(str).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
-        }
-
-        function updateChannels(channels) {
-            const groupsGrid = document.querySelector('.groups-grid');
-            const channelCards = channels.map(channel => {
-                const channelNameEscaped = escapeHtmlAttr(channel.name);
-                return `
-                    <div class="group-card">
-                        <div class="group-header">
-                            <div class="group-name">${channel.name}</div>
-                            <div class="group-status" style="background: ${channel.active ? '#c6f6d5' : '#fef5e7'}; color: ${channel.active ? '#22543d' : '#744210'}">
-                                ${channel.active ? 'Активна' : 'Ожидание'}
-                            </div>
-                        </div>
-                        <div class="group-stats">
-                            <div class="group-stat">
-                                <div class="group-stat-number">${channel.post_count || 0}</div>
-                                <div class="group-stat-label">Постов</div>
-                            </div>
-                            <div class="group-stat">
-                                <div class="group-stat-number">${channel.member_count || 0}</div>
-                                <div class="group-stat-label">Участники</div>
-                            </div>
-                            <div class="group-stat">
-                                <div class="group-stat-number">${channel.success_rate || 0}%</div>
-                                <div class="group-stat-label">Успешность</div>
-                            </div>
-                        </div>
-                        <div class="group-next-post">
-                            Следующий пост: ${channel.next_post_time || '—'}
-                        </div>
-                        <button class="action-btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="sendTestPost('${escapeHtmlAttr(channel.chat_id)}', '${channelNameEscaped}')">Отправить тестовый пост</button>
-                        <button class="action-btn btn-warning" style="margin-top: 10px; width: 100%;" onclick="deleteChannel('${escapeHtmlAttr(channel.chat_id)}', '${channelNameEscaped}')">Удалить канал/группу</button>
-                    </div>
-                `;
-            }).join('');
-            groupsGrid.innerHTML = channelCards;
-        }
-        
-        // Create new post
-        async function createPost() {
-            try {
-                const content = prompt('Enter post content:');
-                if (!content) return;
-                
-                const channelId = prompt('Enter channel ID:');
-                if (!channelId) return;
-                
-                const scheduledTime = prompt('Enter scheduled time (YYYY-MM-DD HH:mm):');
-                if (!scheduledTime) return;
-                
-                dayjs.extend(dayjs_plugin_utc);
-                dayjs.extend(dayjs_plugin_timezone);
-                const tallinnTime = dayjs.tz(scheduledTime, "YYYY-MM-DD HH:mm", "Europe/Tallinn");
-                const isoTallinn = tallinnTime.format("YYYY-MM-DDTHH:mm:ssZ");
-                const response = await fetch(`${API_BASE_URL}/posts`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        content,
-                        channel_id: channelId,
-                        scheduled_time: isoTallinn
-                    })
-                });
-                
-                if (response.ok) {
-                    showNotification('Post created successfully', 'success');
-                    loadDashboardData();
-                } else {
-                    throw new Error('Failed to create post');
-                }
-            } catch (error) {
-                console.error('Error creating post:', error);
-                showNotification('Error creating post', 'error');
-            }
-        }
-        
-        // Manage schedule
-        async function manageSchedule() {
-            try {
-                const action = confirm('Do you want to start the scheduler?') ? 'start' : 'stop';
-                const response = await fetch(`${API_BASE_URL}/scheduler/${action}`, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    showNotification(`Scheduler ${action}ed successfully`, 'success');
-                } else {
-                    throw new Error(`Failed to ${action} scheduler`);
-                }
-            } catch (error) {
-                console.error('Error managing schedule:', error);
-                showNotification('Error managing schedule', 'error');
-            }
-        }
-        
-        // View logs
-        function viewLogs() {
-            showNotification('Loading logs...', 'info');
-            // Implement logs viewing functionality
-        }
-        
-        // Refresh dashboard
-        async function refreshDashboard() {
-            const loadingBar = document.getElementById('loadingBar');
-            loadingBar.style.display = 'block';
-            
-            try {
-                await loadDashboardData();
-                showNotification('Dashboard refreshed successfully', 'success');
-            } catch (error) {
-                console.error('Error refreshing dashboard:', error);
-                showNotification('Error refreshing dashboard', 'error');
-            } finally {
-                loadingBar.style.display = 'none';
-            }
-        }
-        
-        // Show notification
-        function showNotification(message, type = 'info') {
-            // Implement notification system
-            console.log(`${type}: ${message}`);
-        }
-        
-        // Загрузка и отображение запланированных постов
-        async function loadScheduledPosts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/posts`);
-                const posts = await response.json();
-                renderScheduledPosts(posts);
-            } catch (error) {
-                console.error('Ошибка загрузки постов:', error);
-            }
-        }
-
-        function renderScheduledPosts(posts) {
-            const container = document.getElementById('scheduledPosts');
-            if (!posts.length) {
-                container.innerHTML = '<p>Нет запланированных постов</p>';
+            const feedList = document.getElementById('activity-feed-list');
+            feedList.innerHTML = '';
+            if (!activities || activities.length === 0) {
+                feedList.innerHTML = '<p style="color: #666; text-align: center; padding-top: 20px;">Нет недавних активностей.</p>';
                 return;
             }
-            container.innerHTML = posts.map(post => `
-                <div class="schedule-item">
-                    <div class="schedule-info">
-                        <div class="schedule-time">${dayjs(post.scheduled_time).format('DD.MM.YYYY HH:mm')}</div>
-                        <div class="schedule-details">
-                            <h4>${post.channel_name || post.channel_id}</h4>
-                            <p>${post.content}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <button class="action-btn btn-warning" onclick="editPost(${post.id})">Редактировать</button>
-                        <button class="action-btn btn-secondary" onclick="deletePost(${post.id})">Удалить</button>
-                    </div>
-                </div>
-            `).join('');
+            activities.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+                div.innerHTML = `
+                    <div class="activity-icon ${item.type}">${iconMap[item.type] || '⚙️'}</div>
+                    <div class="activity-content">
+                        <div class="activity-text">${item.text}</div>
+                        <div class="activity-time">${item.time}</div>
+                    </div>`;
+                feedList.appendChild(div);
+            });
         }
 
-        // Удаление поста
-        async function deletePost(postId) {
-            if (!confirm('Удалить этот пост?')) return;
-            try {
-                const response = await fetch(`${API_BASE_URL}/posts/${postId}`, { method: 'DELETE' });
-                if (response.ok) {
-                    showNotification('Пост удалён', 'success');
-                    loadScheduledPosts();
-                } else {
-                    throw new Error('Ошибка удаления');
-                }
-            } catch (error) {
-                showNotification('Ошибка удаления', 'error');
+        function renderChart(chartData) {
+            const ctx = document.getElementById('publicationsChart').getContext('2d');
+            if (publicationsChart) {
+                publicationsChart.destroy();
             }
-        }
-
-        // Редактирование поста
-        async function editPost(postId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/posts`);
-                const posts = await response.json();
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                const newContent = prompt('Измените текст поста:', post.content);
-                if (newContent === null) return;
-                const newChannelId = prompt('Измените ID канала:', post.channel_id);
-                if (newChannelId === null) return;
-                const newTime = prompt('Измените дату и время (YYYY-MM-DD HH:mm):', dayjs(post.scheduled_time).format('YYYY-MM-DD HH:mm'));
-                if (newTime === null) return;
-                dayjs.extend(dayjs_plugin_utc);
-                dayjs.extend(dayjs_plugin_timezone);
-                const tallinnTime = dayjs.tz(newTime, "YYYY-MM-DD HH:mm", "Europe/Tallinn");
-                const isoTallinn = tallinnTime.format("YYYY-MM-DDTHH:mm:ssZ");
-                const updateResp = await fetch(`${API_BASE_URL}/posts/${postId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: newContent,
-                        channel_id: newChannelId,
-                        scheduled_time: isoTallinn,
-                        media_path: post.media_path,
-                        media_type: post.media_type
-                    })
-                });
-                if (updateResp.ok) {
-                    showNotification('Пост обновлён', 'success');
-                    loadScheduledPosts();
-                } else {
-                    throw new Error('Ошибка обновления');
+            publicationsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [
+                        {
+                            label: 'Опубликовано',
+                            data: chartData.published,
+                            backgroundColor: 'rgba(72, 187, 120, 0.6)',
+                            borderColor: 'rgba(72, 187, 120, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'Запланировано',
+                            data: chartData.scheduled,
+                            backgroundColor: 'rgba(66, 153, 225, 0.6)',
+                            borderColor: 'rgba(66, 153, 225, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
                 }
-            } catch (error) {
-                showNotification('Ошибка обновления', 'error');
-            }
+            });
         }
-
-        // Загружаем посты при инициализации
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDashboardData();
-            loadScheduledPosts();
-        });
-
-        async function sendTestPost(channelId, channelName) {
-            const content = prompt(`Введите текст тестового поста для "${channelName}" (оставьте пустым для стандартного):`, '');
-            try {
-                const response = await fetch(`${API_BASE_URL}/test_post`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ channel_id: channelId, content: content || undefined })
-                });
-                if (response.ok) {
-                    showNotification('Тестовый пост отправлен!', 'success');
-                } else {
-                    const data = await response.json();
-                    showNotification('Ошибка: ' + (data.detail || 'Не удалось отправить тестовый пост'), 'error');
-                }
-            } catch (error) {
-                showNotification('Ошибка отправки тестового поста', 'error');
-            }
-        }
-
-        async function deleteChannel(channelId, channelName) {
-            if (!confirm(`Удалить канал/группу "${channelName}"? Это действие необратимо.`)) return;
-            try {
-                const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
-                    method: 'DELETE'
-                });
-                if (response.ok) {
-                    showNotification('Канал/группа удалён(а)', 'success');
-                    await loadDashboardData();
-                } else {
-                    const data = await response.json();
-                    showNotification('Ошибка: ' + (data.detail || 'Не удалось удалить канал/группу'), 'error');
-                }
-            } catch (error) {
-                showNotification('Ошибка удаления канала/группы', 'error');
-            }
-        }
+        
+        loadDashboardData();
+        setInterval(loadDashboardData, 30000); // Обновлять каждые 30 секунд
+    });
     </script>
 </body>
 </html>
