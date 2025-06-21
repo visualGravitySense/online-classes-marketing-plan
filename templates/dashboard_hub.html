@@ -34,6 +34,7 @@
             <li onclick="showDashboard('posts')">Посты</li>
             <li onclick="showDashboard('groups')">Группы</li>
             <li onclick="showDashboard('stats')">Статистика</li>
+            <li onclick="showDashboard('content')">Генератор контента</li>
         </ul>
     </div>
     <div class="main-content" id="dashboardContent">
@@ -45,7 +46,8 @@
             main: 'templates/telegram_bot_main_dashboard.html',
             posts: 'templates/telegram_bot_frontend.html',
             groups: 'templates/tg-gruops-dashboard.html',
-            stats: 'templates/telegram_bot_stats.html'
+            stats: 'templates/telegram_bot_stats.html',
+            content: 'templates/content_generator_dashboard.html'
         };
 
         function showDashboard(name) {
