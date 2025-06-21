@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Партнерская программа - UX/UI Academy</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 30px; }
+        h1, h2 { color: #2c3e50; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3); }
+        .main-content { display: grid; grid-template-columns: 1fr; gap: 40px; }
+        .form-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .form-container { background: #fff; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .table-wrapper { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        .table th { background-color: #f2f4f8; font-weight: 600; }
+        .table tr:hover { background-color: #f9f9f9; }
+        .actions-cell { display: flex; gap: 10px; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8em; }
+        .btn-edit { background-color: #3498db; color: white; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; color: #fff; }
+        .status-active { background-color: #28a745; }
+        .status-inactive { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤝 Партнерская программа</h1>
+            <button class="btn btn-primary" id="addPartnerBtn">Добавить партнера</button>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>Список партнеров</h2>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Промокод</th>
+                                <th>Рефералы</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnersTableBody">
+                            <!-- Data will be loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма добавления/редактирования партнера -->
+    <div id="formPopup" class="form-popup">
+        <div class="form-container">
+            <form id="partnerForm">
+                <h2 id="formTitle">Новый партнер</h2>
+                <input type="hidden" id="partnerId" name="partnerId">
+                <div class="form-group">
+                    <label for="name">Имя</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="promo_code">Промокод</label>
+                    <input type="text" id="promo_code" name="promo_code" required>
+                </div>
+                <div class="form-group" id="statusGroup" style="display: none;">
+                    <label for="status">Статус</label>
+                    <select id="status" name="status">
+                        <option value="active">Активен</option>
+                        <option value="inactive">Неактивен</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn" id="cancelBtn" style="background-color: #eee;">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'http://127.0.0.1:5001/api/partners';
+
+            // UI Elements
+            const addBtn = document.getElementById('addPartnerBtn');
+            const formPopup = document.getElementById('formPopup');
+            const form = document.getElementById('partnerForm');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const tableBody = document.getElementById('partnersTableBody');
+            
+            let partnersCache = [];
+
+            // --- Event Listeners ---
+            addBtn.addEventListener('click', () => {
+                resetForm();
+                formPopup.style.display = 'flex';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                formPopup.style.display = 'none';
+            });
+
+            form.addEventListener('submit', handleFormSubmit);
+            tableBody.addEventListener('click', handleTableClick);
+
+            // --- Initial Load ---
+            loadPartners();
+
+            // --- Functions ---
+            function resetForm() {
+                form.reset();
+                document.getElementById('partnerId').value = '';
+                document.getElementById('formTitle').textContent = 'Новый партнер';
+                document.getElementById('saveBtn').textContent = 'Сохранить';
+                document.getElementById('statusGroup').style.display = 'none';
+            }
+
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                const partnerId = document.getElementById('partnerId').value;
+                const url = partnerId ? `${API_URL}/${partnerId}` : API_URL;
+                const method = partnerId ? 'PUT' : 'POST';
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+                    
+                    alert(result.message);
+                    formPopup.style.display = 'none';
+                    loadPartners();
+                } catch (error) {
+                    alert(`Ошибка: ${error.message}`);
+                }
+            }
+            
+            async function handleTableClick(e) {
+                const partnerId = e.target.closest('tr')?.dataset.partnerId;
+                if (!partnerId) return;
+
+                if (e.target.classList.contains('btn-edit')) {
+                    const partner = partnersCache.find(p => p.id == partnerId);
+                    if (partner) {
+                        document.getElementById('formTitle').textContent = 'Редактировать партнера';
+                        document.getElementById('saveBtn').textContent = 'Обновить';
+                        document.getElementById('partnerId').value = partner.id;
+                        document.getElementById('name').value = partner.name;
+                        document.getElementById('email').value = partner.email;
+                        document.getElementById('promo_code').value = partner.promo_code;
+                        document.getElementById('statusGroup').style.display = 'block';
+                        document.getElementById('status').value = partner.status;
+                        formPopup.style.display = 'flex';
+                    }
+                }
+
+                if (e.target.classList.contains('btn-delete')) {
+                    if (confirm('Вы уверены, что хотите удалить партнера и все его записи на курсы?')) {
+                        deletePartner(partnerId);
+                    }
+                }
+            }
+
+            async function loadPartners() {
+                try {
+                    const response = await fetch(API_URL);
+                    partnersCache = await response.json();
+                    renderTable(partnersCache);
+                } catch (error) {
+                    tableBody.innerHTML = `<tr><td colspan="5">Ошибка загрузки.</td></tr>`;
+                }
+            }
+            
+            async function deletePartner(id) {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+                    alert(result.message);
+                    loadPartners();
+                } catch (error) {
+                    alert(`Ошибка удаления: ${error.message}`);
+                }
+            }
+
+            function renderTable(partners) {
+                tableBody.innerHTML = '';
+                if (partners.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Партнеры не найдены.</td></tr>`;
+                    return;
+                }
+                partners.forEach(p => {
+                    const row = `
+                        <tr data-partner-id="${p.id}">
+                            <td>${p.id}</td>
+                            <td>${p.name}</td>
+                            <td>${p.email}</td>
+                            <td>${p.promo_code}</td>
+                            <td>${p.referral_count}</td>
+                            <td class="status-badge ${p.status === 'active' ? 'status-active' : 'status-inactive'}">${p.status === 'active' ? 'Активен' : 'Неактивен'}</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-edit">📝</button>
+                                <button class="btn btn-sm btn-delete">🗑️</button>
+                            </td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

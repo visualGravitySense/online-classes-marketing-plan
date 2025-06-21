@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый отчет - UX/UI Academy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; color: #343a40; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; }
+        h1, h2 { color: #2c3e50; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3); }
+        .filter-section { display: flex; gap: 20px; align-items: center; background: #f1f3f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .filter-section input { padding: 10px; border-radius: 6px; border: 1px solid #ced4da; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: center; }
+        .summary-card { background: linear-gradient(145deg, #f9f9f9, #ffffff); padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .summary-card h3 { font-size: 1.1em; color: #6c757d; margin-bottom: 10px; }
+        .summary-card .amount { font-size: 2em; font-weight: 700; }
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+        .profit { color: #007bff; }
+        .table-wrapper { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .table th { background-color: #e9ecef; }
+        .form-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .form-container { background: #fff; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .chart-container { height: 350px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>📊 Финансовый отчет</h1>
+                <button id="addTransactionBtn" class="btn btn-primary">Добавить операцию</button>
+            </div>
+            <div class="filter-section">
+                <label for="startDate">С:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">По:</label>
+                <input type="date" id="endDate">
+                <button id="applyFilterBtn" class="btn btn-primary" style="padding: 10px 15px;">Применить</button>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Общий доход</h3>
+                    <p id="totalIncome" class="amount income">0 ₽</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Общий расход</h3>
+                    <p id="totalExpense" class="amount expense">0 ₽</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Чистая прибыль</h3>
+                    <p id="netProfit" class="amount profit">0 ₽</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Динамика доходов и расходов</h2>
+            <div class="chart-container">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Детализация операций</h2>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Категория</th>
+                            <th>Описание</th>
+                            <th>Курс</th>
+                            <th>Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Данные будут загружены динамически -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма добавления операции -->
+    <div id="formPopup" class="form-popup">
+        <div class="form-container">
+            <form id="transactionForm">
+                <h2>Новая операция</h2>
+                <div class="form-group">
+                    <label for="type">Тип</label>
+                    <select id="type" name="type" required>
+                        <option value="income">Доход</option>
+                        <option value="expense">Расход</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Сумма (₽)</label>
+                    <input type="number" id="amount" name="amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Дата</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Категория</label>
+                    <input type="text" id="category" name="category" required list="category_list" placeholder="e.g., Продажа курса, Маркетинг">
+                    <datalist id="category_list">
+                        <option value="Продажа курса"></option>
+                        <option value="Маркетинг"></option>
+                        <option value="Зарплата"></option>
+                        <option value="ПО и сервисы"></option>
+                        <option value="Другое"></option>
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="description">Описание</label>
+                    <textarea id="description" name="description" rows="3" required></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="course_id">Связать с курсом (необязательно)</label>
+                    <select id="course_id" name="course_id">
+                        <option value="">Нет</option>
+                        <!-- Курсы будут загружены динамически -->
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" id="closeFormBtn" class="btn">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const TRANSACTIONS_API = 'http://127.0.0.1:5001/api/transactions';
+            const COURSES_API = 'http://127.0.0.1:5001/api/courses';
+
+            // Элементы UI
+            const addTransactionBtn = document.getElementById('addTransactionBtn');
+            const formPopup = document.getElementById('formPopup');
+            const closeFormBtn = document.getElementById('closeFormBtn');
+            const transactionForm = document.getElementById('transactionForm');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const applyFilterBtn = document.getElementById('applyFilterBtn');
+            const coursesSelect = document.getElementById('course_id');
+            const tableBody = document.getElementById('transactionsTableBody');
+            
+            // Элементы сводки
+            const totalIncomeEl = document.getElementById('totalIncome');
+            const totalExpenseEl = document.getElementById('totalExpense');
+            const netProfitEl = document.getElementById('netProfit');
+            
+            let financeChart = null;
+
+            // --- Инициализация ---
+            
+            // Установить даты по умолчанию (текущий месяц) и загрузить данные
+            setDefaultDates();
+            loadInitialData();
+
+            // --- Обработчики событий ---
+
+            addTransactionBtn.addEventListener('click', () => {
+                formPopup.style.display = 'flex';
+                loadCoursesIntoForm();
+            });
+
+            closeFormBtn.addEventListener('click', () => {
+                formPopup.style.display = 'none';
+                transactionForm.reset();
+            });
+            
+            applyFilterBtn.addEventListener('click', () => {
+                loadTransactions();
+            });
+
+            transactionForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(transactionForm);
+                const data = Object.fromEntries(formData.entries());
+                data.amount = parseFloat(data.amount);
+                data.course_id = data.course_id ? parseInt(data.course_id) : null;
+                
+                try {
+                    const response = await fetch(TRANSACTIONS_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!response.ok) throw new Error('Ошибка при добавлении операции');
+                    
+                    alert('Операция успешно добавлена!');
+                    formPopup.style.display = 'none';
+                    transactionForm.reset();
+                    loadTransactions(); // Обновить данные на странице
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            // --- Функции ---
+
+            function setDefaultDates() {
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                startDateInput.value = firstDay.toISOString().split('T')[0];
+                endDateInput.value = lastDay.toISOString().split('T')[0];
+            }
+
+            async function loadInitialData() {
+                await loadTransactions();
+            }
+
+            async function loadCoursesIntoForm() {
+                try {
+                    const response = await fetch(COURSES_API);
+                    const courses = await response.json();
+                    coursesSelect.innerHTML = '<option value="">Нет</option>'; // Сброс
+                    courses.forEach(course => {
+                        const option = `<option value="${course.id}">${course.name}</option>`;
+                        coursesSelect.insertAdjacentHTML('beforeend', option);
+                    });
+                } catch (error) {
+                    console.error('Не удалось загрузить курсы:', error);
+                }
+            }
+
+            async function loadTransactions() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                if (!startDate || !endDate) {
+                    alert('Пожалуйста, выберите диапазон дат.');
+                    return;
+                }
+                const url = `${TRANSACTIONS_API}?start_date=${startDate}&end_date=${endDate}`;
+                
+                try {
+                    const response = await fetch(url);
+                    const transactions = await response.json();
+                    renderTable(transactions);
+                    calculateSummary(transactions);
+                    renderChart(transactions);
+                } catch (error) {
+                    console.error('Ошибка загрузки транзакций:', error);
+                    tableBody.innerHTML = `<tr><td colspan="6">Ошибка загрузки данных.</td></tr>`;
+                }
+            }
+
+            function renderTable(transactions) {
+                tableBody.innerHTML = '';
+                if (transactions.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Нет операций за выбранный период.</td></tr>`;
+                    return;
+                }
+                transactions.forEach(t => {
+                    const row = `
+                        <tr>
+                            <td>${t.date}</td>
+                            <td><span class="${t.type}">${t.type === 'income' ? 'Доход' : 'Расход'}</span></td>
+                            <td>${t.category}</td>
+                            <td>${t.description}</td>
+                            <td>${t.course_name || '–'}</td>
+                            <td class="${t.type}">${(t.type === 'income' ? '+' : '−')}${t.amount.toLocaleString('ru-RU')} ₽</td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            function calculateSummary(transactions) {
+                let totalIncome = 0;
+                let totalExpense = 0;
+                transactions.forEach(t => {
+                    if (t.type === 'income') totalIncome += t.amount;
+                    else totalExpense += t.amount;
+                });
+                const netProfit = totalIncome - totalExpense;
+
+                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU')} ₽`;
+                totalExpenseEl.textContent = `${totalExpense.toLocaleString('ru-RU')} ₽`;
+                netProfitEl.textContent = `${netProfit.toLocaleString('ru-RU')} ₽`;
+            }
+            
+            function renderChart(transactions) {
+                const ctx = document.getElementById('financeChart').getContext('2d');
+                
+                const labels = [...new Set(transactions.map(t => t.date))].sort();
+                const incomeByDate = {};
+                const expenseByDate = {};
+
+                labels.forEach(date => {
+                    incomeByDate[date] = 0;
+                    expenseByDate[date] = 0;
+                });
+
+                transactions.forEach(t => {
+                    if (t.type === 'income') incomeByDate[t.date] += t.amount;
+                    else expenseByDate[t.date] += t.amount;
+                });
+
+                const incomeData = labels.map(date => incomeByDate[date]);
+                const expenseData = labels.map(date => expenseByDate[date]);
+
+                if (financeChart) {
+                    financeChart.destroy();
+                }
+
+                financeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Доходы',
+                                data: incomeData,
+                                borderColor: '#28a745',
+                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                            },
+                            {
+                                label: 'Расходы',
+                                data: expenseData,
+                                borderColor: '#dc3545',
+                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

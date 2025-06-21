@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import sqlite3
 
@@ -17,20 +17,121 @@ def get_db_connection(db_path):
     return conn
 
 def init_db():
-    """Инициализирует базу данных, создает таблицы, если их нет."""
+    """Инициализирует базу данных, создавая необходимые таблицы, если они не существуют."""
     conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-    cursor = conn_tg.cursor()
+    # Создаем таблицу каналов, если ее нет
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS channels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            chat_id TEXT NOT NULL UNIQUE
+        );
+    ''')
     
-    # Создаем таблицу каналов, если она не существует
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS channels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        chat_id TEXT NOT NULL UNIQUE
-    )
-    """)
-    
-    # Можно добавить другие таблицы здесь в будущем
+    # Создаем таблицу курсов для новой функциональности
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS courses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            price REAL NOT NULL,
+            start_date TEXT,
+            status TEXT NOT NULL DEFAULT 'draft' 
+        );
+    ''')
+
+    # Создаем таблицу транзакций для финансового модуля
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL, -- 'income' or 'expense'
+            amount REAL NOT NULL,
+            description TEXT,
+            date TEXT NOT NULL,
+            category TEXT,
+            course_id INTEGER,
+            FOREIGN KEY (course_id) REFERENCES courses(id)
+        );
+    ''')
+
+    # Создаем таблицу для управления командой
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS team_members (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL,
+            email TEXT UNIQUE,
+            status TEXT NOT NULL DEFAULT 'active' -- 'active', 'inactive'
+        );
+    ''')
+
+    # Создаем таблицы для модуля рекламных кампаний
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS campaigns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            source TEXT, -- e.g., 'Telegram Ads', 'Google Ads'
+            budget REAL,
+            start_date TEXT,
+            end_date TEXT,
+            status TEXT NOT NULL DEFAULT 'active' -- 'active', 'paused', 'finished'
+        );
+    ''')
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS campaign_stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            campaign_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            impressions INTEGER,
+            clicks INTEGER,
+            cost REAL,
+            conversions INTEGER,
+            FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
+        );
+    ''')
+
+    # Создаем таблицы для аналитики студентов
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            registration_date TEXT NOT NULL
+        );
+    ''')
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS enrollments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER NOT NULL,
+            course_id INTEGER NOT NULL,
+            enrollment_date TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active', -- 'active', 'completed', 'dropped'
+            FOREIGN KEY (student_id) REFERENCES students(id),
+            FOREIGN KEY (course_id) REFERENCES courses(id)
+        );
+    ''')
+
+    # Создаем таблицы для партнерской программы
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS partners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE,
+            promo_code TEXT NOT NULL UNIQUE,
+            status TEXT NOT NULL DEFAULT 'active' -- 'active', 'inactive'
+        );
+    ''')
+    conn_tg.execute('''
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_id INTEGER NOT NULL,
+            student_id INTEGER NOT NULL,
+            referral_date TEXT NOT NULL,
+            commission_amount REAL,
+            FOREIGN KEY (partner_id) REFERENCES partners(id),
+            FOREIGN KEY (student_id) REFERENCES students(id)
+        );
+    ''')
     
     conn_tg.commit()
     conn_tg.close()
@@ -347,6 +448,449 @@ def get_telegram_stats():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# --- CRUD для курсов ---
+
+@app.route('/api/courses', methods=['POST'])
+def add_course():
+    """Добавляет новый курс."""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        description = data.get('description')
+        price = data.get('price')
+        start_date = data.get('start_date')
+
+        if not name or price is None:
+            return jsonify({'error': 'Название и цена являются обязательными полями'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO courses (name, description, price, start_date) VALUES (?, ?, ?, ?)',
+            (name, description, price, start_date)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Курс успешно добавлен'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/courses', methods=['GET'])
+def get_courses():
+    """Возвращает список всех курсов."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        courses = conn.execute('SELECT * FROM courses ORDER BY id DESC').fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in courses])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/courses/<int:course_id>', methods=['PUT'])
+def update_course(course_id):
+    """Обновляет существующий курс."""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        description = data.get('description')
+        price = data.get('price')
+        start_date = data.get('start_date')
+        status = data.get('status')
+
+        if not name or price is None or status is None:
+            return jsonify({'error': 'Название, цена и статус являются обязательными полями'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'UPDATE courses SET name = ?, description = ?, price = ?, start_date = ?, status = ? WHERE id = ?',
+            (name, description, price, start_date, status, course_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Курс успешно обновлен'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/courses/<int:course_id>', methods=['DELETE'])
+def delete_course(course_id):
+    """Удаляет курс."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute('DELETE FROM courses WHERE id = ?', (course_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Курс успешно удален'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- CRUD для Транзакций ---
+
+@app.route('/api/transactions', methods=['POST'])
+def add_transaction():
+    """Добавляет новую транзакцию."""
+    try:
+        data = request.get_json()
+        # Простая валидация
+        if not all(k in data for k in ['type', 'amount', 'description', 'date', 'category']):
+            return jsonify({'error': 'Не все поля были предоставлены'}), 400
+        
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO transactions (type, amount, description, date, category, course_id) VALUES (?, ?, ?, ?, ?, ?)',
+            (data['type'], data['amount'], data['description'], data['date'], data['category'], data.get('course_id'))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Транзакция успешно добавлена'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/transactions', methods=['GET'])
+def get_transactions():
+    """Возвращает список транзакций с фильтрацией."""
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        
+        query = 'SELECT t.*, c.name as course_name FROM transactions t LEFT JOIN courses c ON t.course_id = c.id'
+        params = []
+        
+        if start_date and end_date:
+            query += ' WHERE t.date BETWEEN ? AND ?'
+            params.extend([start_date, end_date])
+        
+        query += ' ORDER BY t.date DESC'
+        
+        transactions = conn.execute(query, params).fetchall()
+        conn.close()
+        
+        return jsonify([dict(row) for row in transactions])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- CRUD для Команды ---
+
+@app.route('/api/team', methods=['POST'])
+def add_team_member():
+    """Добавляет нового члена команды."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('role'):
+            return jsonify({'error': 'Имя и роль обязательны'}), 400
+        
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO team_members (name, role, email) VALUES (?, ?, ?)',
+            (data['name'], data['role'], data.get('email'))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Сотрудник добавлен'}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Сотрудник с таким email уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/team', methods=['GET'])
+def get_team_members():
+    """Возвращает список всех членов команды."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        members = conn.execute('SELECT * FROM team_members ORDER BY name').fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in members])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/team/<int:member_id>', methods=['PUT'])
+def update_team_member(member_id):
+    """Обновляет данные члена команды."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('role') or not data.get('status'):
+            return jsonify({'error': 'Имя, роль и статус обязательны'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'UPDATE team_members SET name = ?, role = ?, email = ?, status = ? WHERE id = ?',
+            (data['name'], data['role'], data.get('email'), data['status'], member_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Данные сотрудника обновлены'})
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Сотрудник с таким email уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/team/<int:member_id>', methods=['DELETE'])
+def delete_team_member(member_id):
+    """Удаляет члена команды."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute('DELETE FROM team_members WHERE id = ?', (member_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Сотрудник удален'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- CRUD для Рекламных кампаний ---
+
+@app.route('/api/campaigns', methods=['POST'])
+def add_campaign():
+    """Добавляет новую рекламную кампанию."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('budget'):
+            return jsonify({'error': 'Название и бюджет обязательны'}), 400
+        
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO campaigns (name, source, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
+            (data['name'], data.get('source'), data['budget'], data.get('start_date'), data.get('end_date'))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Кампания добавлена'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/campaigns', methods=['GET'])
+def get_campaigns():
+    """Возвращает список всех кампаний с агрегированной статистикой."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        # Этот запрос объединяет кампании с их суммарной статистикой
+        query = """
+            SELECT 
+                c.*,
+                SUM(cs.cost) as total_cost,
+                SUM(cs.clicks) as total_clicks,
+                SUM(cs.conversions) as total_conversions
+            FROM campaigns c
+            LEFT JOIN campaign_stats cs ON c.id = cs.campaign_id
+            GROUP BY c.id
+            ORDER BY c.start_date DESC
+        """
+        campaigns = conn.execute(query).fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in campaigns])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/campaigns/<int:campaign_id>', methods=['PUT'])
+def update_campaign(campaign_id):
+    """Обновляет данные рекламной кампании."""
+    try:
+        data = request.get_json()
+        if not all(k in data for k in ['name', 'budget', 'status']):
+            return jsonify({'error': 'Название, бюджет и статус обязательны'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'UPDATE campaigns SET name=?, source=?, budget=?, start_date=?, end_date=?, status=? WHERE id=?',
+            (data['name'], data.get('source'), data['budget'], data.get('start_date'), data.get('end_date'), data['status'], campaign_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Данные кампании обновлены'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/campaigns/<int:campaign_id>', methods=['DELETE'])
+def delete_campaign(campaign_id):
+    """Удаляет кампанию и связанную с ней статистику."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        # Сначала удаляем статистику, чтобы не нарушить foreign key constraint
+        conn.execute('DELETE FROM campaign_stats WHERE campaign_id = ?', (campaign_id,))
+        # Затем удаляем саму кампанию
+        conn.execute('DELETE FROM campaigns WHERE id = ?', (campaign_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Кампания и ее статистика удалены'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- CRUD для Студентов ---
+
+@app.route('/api/students', methods=['POST'])
+def add_student():
+    """Добавляет нового студента."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('email') or not data.get('registration_date'):
+            return jsonify({'error': 'Имя, email и дата регистрации обязательны'}), 400
+        
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO students (name, email, registration_date) VALUES (?, ?, ?)',
+            (data['name'], data['email'], data['registration_date'])
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Студент добавлен'}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Студент с таким email уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/students', methods=['GET'])
+def get_students():
+    """Возвращает список всех студентов."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        students = conn.execute('SELECT * FROM students ORDER BY registration_date DESC').fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in students])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/students/<int:student_id>', methods=['PUT'])
+def update_student(student_id):
+    """Обновляет данные студента."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('email'):
+            return jsonify({'error': 'Имя и email обязательны'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'UPDATE students SET name=?, email=? WHERE id=?',
+            (data['name'], data['email'], student_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Данные студента обновлены'})
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Студент с таким email уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/students/<int:student_id>', methods=['DELETE'])
+def delete_student(student_id):
+    """Удаляет студента и все его записи на курсы."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        # Сначала удаляем записи на курсы
+        conn.execute('DELETE FROM enrollments WHERE student_id = ?', (student_id,))
+        # Затем самого студента
+        conn.execute('DELETE FROM students WHERE id = ?', (student_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Студент и все его данные удалены'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- CRUD для Партнеров ---
+
+@app.route('/api/partners', methods=['POST'])
+def add_partner():
+    """Добавляет нового партнера."""
+    try:
+        data = request.get_json()
+        if not data.get('name') or not data.get('promo_code'):
+            return jsonify({'error': 'Имя и промокод обязательны'}), 400
+        
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'INSERT INTO partners (name, email, promo_code) VALUES (?, ?, ?)',
+            (data['name'], data.get('email'), data['promo_code'])
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Партнер добавлен'}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Партнер с таким email или промокодом уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/partners', methods=['GET'])
+def get_partners():
+    """Возвращает список партнеров со статистикой по рефералам."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        query = """
+            SELECT 
+                p.*,
+                COUNT(r.id) as referral_count
+            FROM partners p
+            LEFT JOIN referrals r ON p.id = r.partner_id
+            GROUP BY p.id
+            ORDER BY p.name
+        """
+        partners = conn.execute(query).fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in partners])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/partners/<int:partner_id>', methods=['PUT'])
+def update_partner(partner_id):
+    """Обновляет данные партнера."""
+    try:
+        data = request.get_json()
+        if not all(k in data for k in ['name', 'promo_code', 'status']):
+            return jsonify({'error': 'Имя, промокод и статус обязательны'}), 400
+
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute(
+            'UPDATE partners SET name=?, email=?, promo_code=?, status=? WHERE id=?',
+            (data['name'], data.get('email'), data['promo_code'], data['status'], partner_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Данные партнера обновлены'})
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Партнер с таким email или промокодом уже существует'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/partners/<int:partner_id>', methods=['DELETE'])
+def delete_partner(partner_id):
+    """Удаляет партнера и его рефералов."""
+    try:
+        conn = get_db_connection(TELEGRAM_DB_PATH)
+        conn.execute('DELETE FROM referrals WHERE partner_id = ?', (partner_id,))
+        conn.execute('DELETE FROM partners WHERE id = ?', (partner_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Партнер и его рефералы удалены'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- Рендеринг страниц ---
+@app.route('/manage-courses')
+def manage_courses_page():
+    """Открывает страницу управления курсами."""
+    return render_template('manage_courses.html')
+
+@app.route('/financial-report')
+def financial_report_page():
+    """Открывает страницу финансового отчета."""
+    return render_template('financial_report.html')
+
+@app.route('/manage-team')
+def manage_team_page():
+    """Открывает страницу управления командой."""
+    return render_template('manage_team.html')
+
+@app.route('/manage-campaigns')
+def manage_campaigns_page():
+    """Открывает страницу управления рекламными кампаниями."""
+    return render_template('manage_campaigns.html')
+
+@app.route('/student-analytics')
+def student_analytics_page():
+    """Открывает страницу аналитики студентов."""
+    return render_template('student_analytics.html')
+
+@app.route('/partner-program')
+def partner_program_page():
+    return render_template('partner_program.html')
 
 if __name__ == '__main__':
     init_db() # Вызываем инициализацию БД при старте

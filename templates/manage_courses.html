@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление курсами - UX/UI Academy</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: #2c3e50;
+            font-size: 2em;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+        }
+        .form-card, .table-card {
+            background: #fdfdfd;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #e8e8e8;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .table th {
+            background-color: #f2f4f8;
+            font-weight: 600;
+        }
+        .table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        .btn-edit { background-color: #3498db; color: white; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+
+        @media (max-width: 992px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Управление курсами</h1>
+            <button class="btn btn-primary" id="addCourseBtn">Добавить новый курс</button>
+        </header>
+
+        <div class="content-grid">
+            <div class="form-card" id="courseFormContainer" style="display: none;">
+                <h2 id="formTitle">Новый курс</h2>
+                <form id="courseForm">
+                    <input type="hidden" id="courseId" name="courseId">
+                    <div class="form-group">
+                        <label for="name">Название курса</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Описание</label>
+                        <textarea id="description" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Цена (₽)</label>
+                        <input type="number" id="price" name="price" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_date">Дата начала</label>
+                        <input type="date" id="start_date" name="start_date">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status">
+                            <option value="draft">Черновик</option>
+                            <option value="active">Активен</option>
+                            <option value="archived">В архиве</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Сохранить курс</button>
+                    <button type="button" class="btn" id="cancelBtn" style="background-color: #eee;">Отмена</button>
+                </form>
+            </div>
+
+            <div class="table-card">
+                <h2>Список курсов</h2>
+                <div style="overflow-x:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Цена</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coursesTableBody">
+                            <!-- Данные будут загружены через JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const API_BASE_URL = 'http://127.0.0.1:5001/api/courses';
+            const courseForm = document.getElementById('courseForm');
+            const courseFormContainer = document.getElementById('courseFormContainer');
+            const addCourseBtn = document.getElementById('addCourseBtn');
+            const coursesTableBody = document.getElementById('coursesTableBody');
+            const formTitle = document.getElementById('formTitle');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const courseIdField = document.getElementById('courseId');
+            
+            let coursesData = []; // Кэш для данных курсов
+
+            // Показать/скрыть форму
+            addCourseBtn.addEventListener('click', () => {
+                resetForm();
+                courseFormContainer.style.display = 'block';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                courseFormContainer.style.display = 'none';
+                resetForm();
+            });
+
+            // Загрузить курсы при загрузке страницы
+            loadCourses();
+
+            // Обработка отправки формы (создание или обновление)
+            courseForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(courseForm);
+                const data = Object.fromEntries(formData.entries());
+                data.price = parseFloat(data.price);
+                
+                const courseId = courseIdField.value;
+                const method = courseId ? 'PUT' : 'POST';
+                const url = courseId ? `${API_BASE_URL}/${courseId}` : API_BASE_URL;
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Ошибка при ${courseId ? 'обновлении' : 'добавлении'} курса`);
+                    }
+
+                    alert(`Курс успешно ${courseId ? 'обновлен' : 'добавлен'}!`);
+                    courseFormContainer.style.display = 'none';
+                    resetForm();
+                    loadCourses(); // Перезагрузить список курсов
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert(`Не удалось сохранить курс: ${error.message}`);
+                }
+            });
+            
+            // Обработка кликов по таблице (редактирование и удаление)
+            coursesTableBody.addEventListener('click', async (e) => {
+                const target = e.target;
+                const courseId = target.closest('tr')?.dataset.courseId;
+
+                if (!courseId) return;
+
+                // Кнопка удаления
+                if (target.matches('.btn-delete')) {
+                    if (confirm(`Вы уверены, что хотите удалить курс с ID ${courseId}?`)) {
+                        await deleteCourse(courseId);
+                    }
+                }
+
+                // Кнопка редактирования
+                if (target.matches('.btn-edit')) {
+                    const course = coursesData.find(c => c.id == courseId);
+                    if (course) {
+                        fillFormForEdit(course);
+                    }
+                }
+            });
+
+            // Функция загрузки и отображения курсов
+            async function loadCourses() {
+                try {
+                    const response = await fetch(API_BASE_URL);
+                    if (!response.ok) throw new Error('Не удалось загрузить курсы');
+                    
+                    coursesData = await response.json();
+                    renderCourses(coursesData);
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    coursesTableBody.innerHTML = `<tr><td colspan="5">Ошибка загрузки данных.</td></tr>`;
+                }
+            }
+
+            // Функция удаления курса
+            async function deleteCourse(id) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Ошибка при удалении');
+                    }
+                    alert('Курс успешно удален!');
+                    loadCourses();
+                } catch(error) {
+                    alert(`Не удалось удалить курс: ${error.message}`);
+                }
+            }
+            
+            // Заполнение формы для редактирования
+            function fillFormForEdit(course) {
+                formTitle.textContent = 'Редактировать курс';
+                saveBtn.textContent = 'Обновить курс';
+                courseIdField.value = course.id;
+                document.getElementById('name').value = course.name;
+                document.getElementById('description').value = course.description;
+                document.getElementById('price').value = course.price;
+                document.getElementById('start_date').value = course.start_date;
+                document.getElementById('status').value = course.status;
+                courseFormContainer.style.display = 'block';
+            }
+
+            // Сброс формы в исходное состояние
+            function resetForm() {
+                courseForm.reset();
+                formTitle.textContent = 'Новый курс';
+                saveBtn.textContent = 'Сохранить курс';
+                courseIdField.value = '';
+            }
+
+            // Функция рендеринга курсов в таблице
+            function renderCourses(courses) {
+                coursesTableBody.innerHTML = ''; // Очищаем таблицу
+                if (courses.length === 0) {
+                    coursesTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Пока нет ни одного курса.</td></tr>`;
+                    return;
+                }
+
+                courses.forEach(course => {
+                    const row = `
+                        <tr data-course-id="${course.id}">
+                            <td>${course.id}</td>
+                            <td>${course.name}</td>
+                            <td>${course.price.toLocaleString('ru-RU')} ₽</td>
+                            <td><span class="status-${course.status}">${course.status}</span></td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-edit">📝</button>
+                                <button class="btn btn-sm btn-delete">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                    coursesTableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

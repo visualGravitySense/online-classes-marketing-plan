@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление командой - UX/UI Academy</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 30px; }
+        header h1 { color: #2c3e50; font-size: 2em; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 0.95rem; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3); }
+        .main-content { display: grid; grid-template-columns: 1fr 2fr; gap: 40px; }
+        .form-card, .table-card { background: #fdfdfd; padding: 30px; border-radius: 10px; border: 1px solid #e8e8e8; }
+        h2 { margin-bottom: 20px; color: #34495e; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        .table th { background-color: #f2f4f8; font-weight: 600; }
+        .table tr:hover { background-color: #f9f9f9; }
+        .actions-cell { display: flex; gap: 10px; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8em; }
+        .btn-edit { background-color: #3498db; color: white; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; color: #fff; }
+        .status-active { background-color: #28a745; }
+        .status-inactive { background-color: #6c757d; }
+        @media (max-width: 992px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👥 Управление командой</h1>
+            <button class="btn btn-primary" id="addMemberBtn">Добавить сотрудника</button>
+        </header>
+
+        <div class="main-content">
+            <div class="form-card" id="memberFormContainer" style="display: none;">
+                <h2 id="formTitle">Новый сотрудник</h2>
+                <form id="memberForm">
+                    <input type="hidden" id="memberId" name="memberId">
+                    <div class="form-group">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Роль</label>
+                        <input type="text" id="role" name="role" required placeholder="e.g., Дизайнер, Менеджер">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                    <div class="form-group" id="statusGroup" style="display: none;">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status">
+                            <option value="active">Активен</option>
+                            <option value="inactive">Неактивен</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">Сохранить</button>
+                        <button type="button" class="btn" id="cancelBtn" style="background-color: #eee;">Отмена</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-card">
+                <h2>Список сотрудников</h2>
+                <div style="overflow-x:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя</th>
+                                <th>Роль</th>
+                                <th>Email</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTableBody">
+                            <!-- Data will be loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'http://127.0.0.1:5001/api/team';
+            
+            // UI Elements
+            const addBtn = document.getElementById('addMemberBtn');
+            const formContainer = document.getElementById('memberFormContainer');
+            const form = document.getElementById('memberForm');
+            const tableBody = document.getElementById('membersTableBody');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const statusGroup = document.getElementById('statusGroup');
+            const formTitle = document.getElementById('formTitle');
+            const saveBtn = document.getElementById('saveBtn');
+            const memberIdField = document.getElementById('memberId');
+
+            let membersCache = [];
+
+            // --- Event Listeners ---
+            addBtn.addEventListener('click', () => {
+                resetForm();
+                formContainer.style.display = 'block';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                formContainer.style.display = 'none';
+            });
+            
+            form.addEventListener('submit', handleFormSubmit);
+            tableBody.addEventListener('click', handleTableClick);
+
+            // --- Initial Load ---
+            loadMembers();
+
+            // --- Functions ---
+            function resetForm() {
+                form.reset();
+                memberIdField.value = '';
+                formTitle.textContent = 'Новый сотрудник';
+                saveBtn.textContent = 'Сохранить';
+                statusGroup.style.display = 'none';
+            }
+
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                const memberId = memberIdField.value;
+                const url = memberId ? `${API_URL}/${memberId}` : API_URL;
+                const method = memberId ? 'PUT' : 'POST';
+                
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Server error');
+                    
+                    alert(result.message);
+                    resetForm();
+                    formContainer.style.display = 'none';
+                    loadMembers();
+                } catch (error) {
+                    alert(`Ошибка: ${error.message}`);
+                }
+            }
+
+            async function handleTableClick(e) {
+                const target = e.target;
+                const memberId = target.closest('tr')?.dataset.memberId;
+                if (!memberId) return;
+
+                if (target.classList.contains('btn-edit')) {
+                    const member = membersCache.find(m => m.id == memberId);
+                    if (member) {
+                        formTitle.textContent = 'Редактировать сотрудника';
+                        saveBtn.textContent = 'Обновить';
+                        memberIdField.value = member.id;
+                        document.getElementById('name').value = member.name;
+                        document.getElementById('role').value = member.role;
+                        document.getElementById('email').value = member.email;
+                        document.getElementById('status').value = member.status;
+                        statusGroup.style.display = 'block';
+                        formContainer.style.display = 'block';
+                    }
+                }
+
+                if (target.classList.contains('btn-delete')) {
+                    if (confirm(`Удалить сотрудника с ID ${memberId}?`)) {
+                        deleteMember(memberId);
+                    }
+                }
+            }
+
+            async function loadMembers() {
+                try {
+                    const response = await fetch(API_URL);
+                    membersCache = await response.json();
+                    renderTable(membersCache);
+                } catch (error) {
+                    tableBody.innerHTML = `<tr><td colspan="6">Ошибка загрузки.</td></tr>`;
+                }
+            }
+
+            async function deleteMember(id) {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+                    alert(result.message);
+                    loadMembers();
+                } catch (error) {
+                    alert(`Ошибка удаления: ${error.message}`);
+                }
+            }
+
+            function renderTable(members) {
+                tableBody.innerHTML = '';
+                if (members.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Сотрудники не найдены.</td></tr>`;
+                    return;
+                }
+                members.forEach(member => {
+                    const row = `
+                        <tr data-member-id="${member.id}">
+                            <td>${member.id}</td>
+                            <td>${member.name}</td>
+                            <td>${member.role}</td>
+                            <td>${member.email || 'N/A'}</td>
+                            <td><span class="status-badge status-${member.status}">${member.status === 'active' ? 'Активен' : 'Неактивен'}</span></td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-edit">📝</button>
+                                <button class="btn btn-sm btn-delete">🗑️</button>
+                            </td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
