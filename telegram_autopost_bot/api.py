@@ -1,9 +1,13 @@
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List, Dict
 import json
+import os
+from pathlib import Path as PathLib
 from aiogram import Bot
 
 from database import Database
@@ -22,10 +26,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+templates_path = PathLib(__file__).parent.parent / "templates"
+if templates_path.exists():
+    app.mount("/templates", StaticFiles(directory=str(templates_path)), name="templates")
+
 # Initialize bot and database
 bot = Bot(token=BOT_TOKEN)
 db = Database('data/posts.db')
 scheduler = PostScheduler(db, bot, {})
+
+# Main page
+@app.get("/")
+async def main_page():
+    """Serve the main dashboard"""
+    dashboard_path = PathLib(__file__).parent.parent / "templates" / "dashboard_hub.html"
+    if dashboard_path.exists():
+        return FileResponse(str(dashboard_path))
+    else:
+        return {"message": "Dashboard not found. Please check templates/dashboard_hub.html"}
 
 # Models
 class Post(BaseModel):
@@ -43,6 +62,19 @@ class Channel(BaseModel):
 class TestPostRequest(BaseModel):
     channel_id: str
     content: Optional[str] = 'Тестовый пост!'
+
+class ContentGenerationRequest(BaseModel):
+    audience_group: str
+    content_type: str
+    channel_id: str
+    scheduled_time: Optional[datetime] = None
+    custom_prompt: Optional[str] = None
+
+class ContentPreview(BaseModel):
+    content: str
+    audience_group: str
+    content_type: str
+    preview_id: str
 
 # API Endpoints
 @app.get("/api/stats")
@@ -216,6 +248,113 @@ async def delete_all_channels():
         return {"status": "success", "message": "All channels deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/content/generate")
+async def generate_content(request: ContentGenerationRequest):
+    """Generate content for specific audience and type"""
+    try:
+        from integrated_content_generator import ContentGenerator
+        
+        generator = ContentGenerator()
+        content = generator.generate_content(
+            audience_group=request.audience_group,
+            content_type=request.content_type,
+            custom_prompt=request.custom_prompt
+        )
+        
+        # Create preview ID
+        import uuid
+        preview_id = str(uuid.uuid4())
+        
+        return {
+            "status": "success",
+            "content": content,
+            "preview_id": preview_id,
+            "audience_group": request.audience_group,
+            "content_type": request.content_type
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/content/publish")
+async def publish_generated_content(request: ContentGenerationRequest):
+    """Generate and immediately publish content"""
+    try:
+        from integrated_content_generator import ContentGenerator
+        
+        generator = ContentGenerator()
+        content = generator.generate_content(
+            audience_group=request.audience_group,
+            content_type=request.content_type,
+            custom_prompt=request.custom_prompt
+        )
+        
+        # Add to database
+        post_id = db.add_post(
+            content=content,
+            channel_id=request.channel_id,
+            scheduled_time=request.scheduled_time or datetime.now(),
+            media_path=None,
+            media_type=None
+        )
+        
+        return {
+            "status": "success",
+            "post_id": post_id,
+            "content": content
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/content/audiences")
+async def get_audience_groups():
+    """Get available audience groups"""
+    return {
+        "audiences": [
+            "Новички в дизайне",
+            "Junior дизайнеры", 
+            "Фрилансеры",
+            "Разработчики"
+        ]
+    }
+
+@app.get("/api/content/types")
+async def get_content_types():
+    """Get available content types"""
+    return {
+        "content_types": [
+            "Проблема",
+            "Решение",
+            "Преимущества курса",
+            "Кейс",
+            "Совет",
+            "Мотивация"
+        ]
+    }
+
+@app.get("/api/content/analytics")
+async def get_content_analytics():
+    """Get content generation analytics"""
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    
+    # Posts by audience (if we add audience tracking)
+    cursor.execute("""
+        SELECT COUNT(*) as total_posts,
+               COUNT(CASE WHEN published = TRUE THEN 1 END) as published_posts,
+               COUNT(CASE WHEN error_message IS NOT NULL THEN 1 END) as failed_posts
+        FROM posts
+    """)
+    
+    stats = cursor.fetchone()
+    conn.close()
+    
+    return {
+        "total_posts": stats[0],
+        "published_posts": stats[1], 
+        "failed_posts": stats[2],
+        "success_rate": (stats[1]/stats[0]*100 if stats[0] > 0 else 0)
+    }
 
 if __name__ == "__main__":
     import uvicorn
