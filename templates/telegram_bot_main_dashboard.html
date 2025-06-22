@@ -17,25 +17,25 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #d4eaf7 100%);
             min-height: 100vh;
-            color: #333;
+            color: #34495e;
         }
 
         .dashboard {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         /* Заголовок с анимацией */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             position: relative;
             overflow: hidden;
         }
@@ -47,8 +47,8 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            animation: rainbow 3s linear infinite;
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
+            animation: rainbow 4s linear infinite;
         }
 
         @keyframes rainbow {
@@ -73,7 +73,8 @@
         .logo {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
+            color: white;
             border-radius: 15px;
             display: flex;
             align-items: center;
@@ -90,7 +91,7 @@
         .header-text h1 {
             font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a, #42a5f5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -99,7 +100,7 @@
         }
 
         .header-text p {
-            color: #666;
+            color: #576574;
             font-size: 1.1rem;
             animation: fadeInUp 0.8s ease-out 0.2s both;
         }
@@ -119,7 +120,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 15px 25px;
+            padding: 12px 20px;
             color: white;
             border-radius: 50px;
             font-weight: 600;
@@ -128,7 +129,7 @@
         }
 
         .status-indicator {
-            background: linear-gradient(135deg, #48bb78, #38a169);
+            background: linear-gradient(135deg, #34d399, #22c55e);
             animation: glow 2s ease-in-out infinite alternate, fadeInUp 0.8s ease-out 0.4s both;
         }
         
@@ -138,8 +139,8 @@
         }
 
         @keyframes glow {
-            from { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5); }
-            to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
+            from { box-shadow: 0 0 15px rgba(52, 211, 153, 0.5); }
+            to { box-shadow: 0 0 25px rgba(52, 211, 153, 0.8); }
         }
 
         .status-dot, .status-dot-offline {
@@ -151,7 +152,7 @@
 
         .status-dot {
             background: white;
-            animation: blink 1s infinite;
+            animation: blink 1.5s infinite;
         }
 
         .status-dot-offline {
@@ -165,11 +166,10 @@
 
         /* Статистика */
         .stats-overview {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: transparent;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: none;
             margin-bottom: 30px;
             animation: fadeInUp 0.8s ease-out 0.6s both;
         }
@@ -177,36 +177,39 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
 
         .stat-item {
             text-align: center;
             padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: 5px solid;
+            transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.2);
         }
 
-        .stat-item.posts { border-left-color: #667eea; }
-        .stat-item.groups { border-left-color: #4ecdc4; }
-        .stat-item.success { border-left-color: #48bb78; }
-        .stat-item.pending { border-left-color: #ed8936; }
+        .stat-item.posts { border-top-color: #42a5f5; }
+        .stat-item.groups { border-top-color: #4dd0e1; }
+        .stat-item.success { border-top-color: #26a69a; }
+        .stat-item.pending { border-top-color: #66bb6a; }
 
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #666;
+            color: #576574;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -220,17 +223,18 @@
             animation: fadeInUp 0.8s ease-out 0.8s both;
         }
 
-        .activity-feed, .charts-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+        .activity-feed, .charts-section, .quick-actions, .groups-section {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
 
-        .activity-feed:hover, .charts-section:hover {
-            transform: translateY(-2px);
+        .activity-feed:hover, .charts-section:hover, .quick-actions:hover, .groups-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.1);
         }
 
         .activity-feed {
@@ -251,7 +255,7 @@
         .section-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -259,27 +263,26 @@
         }
 
         .section-title::before {
-            content: '📊';
             font-size: 1.2em;
         }
-
-        .activity-feed .section-title::before {
-            content: '📝';
-        }
+        .charts-section .section-title::before { content: '📊'; }
+        .activity-feed .section-title::before { content: '📝'; }
+        .quick-actions .section-title::before { content: '⚡'; }
+        .groups-section .section-title::before { content: '👥'; }
 
         .activity-item {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 10px;
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.6);
             transition: all 0.3s ease;
         }
 
         .activity-item:hover {
-            background: #e9ecef;
+            background: #fff;
             transform: translateX(5px);
         }
 
@@ -294,10 +297,10 @@
             color: white;
         }
 
-        .activity-icon.success { background: #48bb78; }
-        .activity-icon.warning { background: #ed8936; }
-        .activity-icon.error { background: #f56565; }
-        .activity-icon.info { background: #4299e1; }
+        .activity-icon.success { background: linear-gradient(135deg, #34d399, #22c55e); }
+        .activity-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .activity-icon.error { background: linear-gradient(135deg, #f87171, #ef4444); }
+        .activity-icon.info { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
 
         .activity-content {
             flex: 1;
@@ -305,28 +308,19 @@
 
         .activity-text {
             font-weight: 500;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 3px;
         }
 
         .activity-time {
             font-size: 0.8rem;
-            color: #718096;
+            color: #576574;
         }
 
         /* Быстрые действия */
         .quick-actions {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
             animation: fadeInUp 0.8s ease-out 1s both;
-        }
-
-        .quick-actions .section-title::before {
-            content: '⚡';
         }
 
         .action-buttons {
@@ -350,41 +344,28 @@
             color: white;
             position: relative;
             overflow: hidden;
-        }
-
-        .action-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .action-button:hover::before {
-            left: 100%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
 
         .action-button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
         }
 
         .action-button.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
         }
 
         .action-button.success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
+            background: linear-gradient(135deg, #34d399, #22c55e);
         }
 
         .action-button.warning {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
         }
 
         .action-button.danger {
-            background: linear-gradient(135deg, #f56565, #c53030);
+            background: linear-gradient(135deg, #f87171, #ef4444);
         }
 
         /* Группы */
@@ -395,20 +376,22 @@
         .groups-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
 
         .group-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(15px);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid white;
         }
 
         .group-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.15);
         }
 
         .group-header {
@@ -420,7 +403,7 @@
 
         .group-name {
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             font-size: 1.1rem;
         }
 
@@ -432,13 +415,13 @@
         }
 
         .group-status.active {
-            background: #c6f6d5;
-            color: #22543d;
+            background: #d1fae5;
+            color: #065f46;
         }
 
         .group-status.paused {
-            background: #fed7d7;
-            color: #742a2a;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .group-stats {
@@ -454,21 +437,22 @@
         .group-stat-number {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
         }
 
         .group-stat-label {
             font-size: 0.7rem;
-            color: #666;
+            color: #576574;
             text-transform: uppercase;
         }
 
         .group-next-post {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.5);
             padding: 10px;
             border-radius: 8px;
             font-size: 0.9rem;
-            color: #666;
+            color: #576574;
+            border: 1px solid #e0e6ed;
         }
 
         /* Адаптивность */
@@ -481,7 +465,7 @@
 
         @media (max-width: 768px) {
             .dashboard {
-                padding: 10px;
+                padding: 15px;
             }
             
             .header-content {
@@ -513,9 +497,9 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
             transform: translateX(-100%);
-            animation: loading-slide 2s ease-in-out infinite;
+            animation: loading-slide 3s ease-in-out infinite;
             z-index: 1000;
         }
 
@@ -527,7 +511,6 @@
         /* Улучшенные состояния */
         .processing {
             position: relative;
-            pointer-events: none;
         }
 
         .processing::after {
@@ -538,10 +521,17 @@
             right: 0;
             bottom: 0;
             background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 20px;
+            border-radius: 12px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .processing::before {
@@ -552,7 +542,7 @@
             transform: translate(-50%, -50%);
             z-index: 1;
             font-weight: 600;
-            color: #667eea;
+            color: #42a5f5;
         }
     </style>
 </head>
@@ -644,19 +634,19 @@
         <div class="quick-actions">
             <div class="section-title">Быстрые действия</div>
             <div class="action-buttons">
-                <button class="action-button primary" onclick="addNewPost()">
+                <button class="action-button primary" onclick="addNewPost(event)">
                     <span>📝</span>
                     Добавить пост
                 </button>
-                <button class="action-button success" onclick="startScheduler()">
+                <button class="action-button success" onclick="startScheduler(event)">
                     <span>▶️</span>
                     Запустить планировщик
                 </button>
-                <button class="action-button warning" onclick="pauseScheduler()">
+                <button class="action-button warning" onclick="pauseScheduler(event)">
                     <span>⏸️</span>
                     Остановить планировщик
                 </button>
-                <button class="action-button danger" onclick="clearQueue()">
+                <button class="action-button danger" onclick="clearQueue(event)">
                     <span>🗑️</span>
                     Очистить очередь
                 </button>
@@ -747,10 +737,17 @@
                     datasets: [{
                         label: 'Публикации',
                         data: [12, 19, 15, 25, 22, 18, 24],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#42a5f5',
+                        backgroundColor: 'rgba(66, 165, 245, 0.2)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#42a5f5',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#42a5f5',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7,
+                        pointRadius: 5
                     }]
                 },
                 options: {
@@ -765,12 +762,18 @@
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                color: '#576574'
                             }
                         },
                         x: {
                             grid: {
                                 display: false
+                            },
+                            ticks: {
+                                color: '#576574'
                             }
                         }
                     }
@@ -811,8 +814,8 @@
             }, 30000);
         }
 
-        function addNewPost() {
-            const button = event.target;
+        function addNewPost(event) {
+            const button = event.target.closest('.action-button');
             button.classList.add('processing');
             
             setTimeout(() => {
@@ -821,8 +824,8 @@
             }, 2000);
         }
 
-        function startScheduler() {
-            const button = event.target;
+        function startScheduler(event) {
+            const button = event.target.closest('.action-button');
             button.classList.add('processing');
             
             fetch('/api/telegram/scheduler/start', { method: 'POST' })
@@ -842,8 +845,8 @@
                 });
         }
 
-        function pauseScheduler() {
-            const button = event.target;
+        function pauseScheduler(event) {
+            const button = event.target.closest('.action-button');
             button.classList.add('processing');
             
             fetch('/api/telegram/scheduler/pause', { method: 'POST' })
@@ -863,9 +866,9 @@
                 });
         }
 
-        function clearQueue() {
+        function clearQueue(event) {
             if (confirm('Вы уверены, что хотите очистить очередь постов?')) {
-                const button = event.target;
+                const button = event.target.closest('.action-button');
                 button.classList.add('processing');
                 
                 fetch('/api/telegram/queue/clear', { method: 'POST' })

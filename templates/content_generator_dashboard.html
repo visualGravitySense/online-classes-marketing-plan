@@ -13,25 +13,25 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #d4eaf7 100%);
             min-height: 100vh;
-            color: #333;
+            color: #34495e;
         }
 
         .dashboard {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         /* Заголовок с анимацией */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -44,8 +44,8 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            animation: rainbow 3s linear infinite;
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
+            animation: rainbow 4s linear infinite;
         }
 
         @keyframes rainbow {
@@ -56,7 +56,7 @@
         .header h1 {
             font-size: 2.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a, #42a5f5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -65,7 +65,7 @@
         }
 
         .header p {
-            color: #666;
+            color: #576574;
             font-size: 1.1rem;
             animation: fadeInUp 0.8s ease-out 0.2s both;
         }
@@ -83,11 +83,10 @@
 
         /* Статистика */
         .stats-overview {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: transparent;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: none;
             margin-bottom: 30px;
             animation: fadeInUp 0.8s ease-out 0.4s both;
         }
@@ -95,35 +94,38 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
 
         .stat-item {
             text-align: center;
             padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: 5px solid;
+            transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.2);
         }
 
-        .stat-item.queue { border-left-color: #667eea; }
-        .stat-item.generated { border-left-color: #48bb78; }
-        .stat-item.total { border-left-color: #ed8936; }
+        .stat-item.queue { border-top-color: #42a5f5; }
+        .stat-item.generated { border-top-color: #4dd0e1; }
+        .stat-item.total { border-top-color: #26a69a; }
 
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #666;
+            color: #576574;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -137,23 +139,24 @@
             animation: fadeInUp 0.8s ease-out 0.6s both;
         }
 
-        .generator-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+        .generator-panel, .preview-panel, .batch-controls {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
 
-        .generator-panel:hover {
-            transform: translateY(-2px);
+        .generator-panel:hover, .preview-panel:hover, .batch-controls:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.1);
         }
 
         .panel-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -161,9 +164,12 @@
         }
 
         .panel-title::before {
-            content: '✍️';
             font-size: 1.2em;
         }
+        .generator-panel .panel-title::before { content: '✍️'; }
+        .preview-panel .panel-title::before { content: '👁️'; }
+        .batch-controls .panel-title::before { content: '🔄'; }
+
 
         .form-group {
             margin-bottom: 20px;
@@ -173,26 +179,27 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #4a5568;
+            color: #576574;
             font-size: 0.95rem;
         }
 
         .form-select, .form-input, .form-textarea {
             width: 100%;
             padding: 15px 18px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid #e0e6ed;
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: white;
+            background: rgba(255, 255, 255, 0.5);
             font-family: inherit;
+            color: #34495e;
         }
-
+        
         .form-select:focus, .form-input:focus, .form-textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
+            border-color: #42a5f5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
         }
 
         .form-textarea {
@@ -214,41 +221,22 @@
             gap: 10px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 5px 15px rgba(66, 165, 245, 0.3);
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 165, 245, 0.5);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
             color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
+            background: linear-gradient(135deg, #80cbc4, #b2dfdb);
+            color: #004d40;
         }
 
         .btn-group {
@@ -259,109 +247,65 @@
         }
 
         .preview-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             max-height: 600px;
             overflow-y: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .preview-panel:hover {
-            transform: translateY(-2px);
-        }
-
-        .preview-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .preview-title::before {
-            content: '👁️';
-            font-size: 1.2em;
         }
 
         .preview-content {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border: 2px solid #e2e8f0;
+            background: linear-gradient(135deg, #f0f9ff, #e3f2fd);
+            border: 1px solid #e0e6ed;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
             white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
+            font-family: 'SF Mono', 'Courier New', monospace;
             font-size: 0.9rem;
             line-height: 1.6;
             transition: all 0.3s ease;
         }
 
         .preview-content:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            border-color: #42a5f5;
+            box-shadow: 0 5px 15px rgba(66, 165, 245, 0.1);
         }
 
         .batch-controls {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
             animation: fadeInUp 0.8s ease-out 0.8s both;
         }
 
-        .batch-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .batch-title::before {
-            content: '🔄';
-            font-size: 1.2em;
-        }
-
         .batch-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
 
         .batch-item {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            background: rgba(255, 255, 255, 0.7);
             border-radius: 15px;
             padding: 25px;
             text-align: center;
-            border-left: 5px solid #667eea;
-            transition: transform 0.3s ease;
+            border: 1px solid white;
+            border-top: 5px solid #66bb6a;
+            transition: all 0.3s ease;
             cursor: pointer;
         }
 
         .batch-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 10px 25px rgba(102, 187, 106, 0.3);
         }
 
         .batch-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #667eea;
+            color: #26a69a;
             margin-bottom: 10px;
         }
 
         .batch-label {
-            color: #666;
+            color: #576574;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -380,7 +324,7 @@
 
         @media (max-width: 768px) {
             .dashboard {
-                padding: 10px;
+                padding: 15px;
             }
             
             .header h1 {
@@ -391,7 +335,7 @@
                 flex-direction: column;
             }
             
-            .stats-grid {
+            .stats-grid, .batch-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -403,9 +347,9 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
             transform: translateX(-100%);
-            animation: loading-slide 2s ease-in-out infinite;
+            animation: loading-slide 3s ease-in-out infinite;
             z-index: 1000;
         }
 
@@ -417,7 +361,6 @@
         /* Улучшенные состояния */
         .generating {
             position: relative;
-            pointer-events: none;
         }
 
         .generating::after {
@@ -428,10 +371,17 @@
             right: 0;
             bottom: 0;
             background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .generating::before {
@@ -442,7 +392,7 @@
             transform: translate(-50%, -50%);
             z-index: 1;
             font-weight: 600;
-            color: #667eea;
+            color: #42a5f5;
         }
     </style>
 </head>
@@ -509,7 +459,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Дополнительные требования</label>
-                    <textarea class="form-textarea" id="requirements" placeholder="Опишите дополнительные требования к контенту..."></textarea>
+                    <textarea class="form-textarea" id="requirements" placeholder="Например: добавь эмодзи, сделай текст короче..."></textarea>
                 </div>
 
                 <div class="btn-group">
@@ -517,7 +467,7 @@
                         <span>🚀</span>
                         Сгенерировать контент
                     </button>
-                    <button class="btn btn-secondary" onclick="saveTemplate()">
+                    <button class="btn btn-secondary" onclick="saveTemplate(event)">
                         <span>💾</span>
                         Сохранить шаблон
                     </button>
@@ -525,7 +475,7 @@
             </div>
 
             <div class="preview-panel">
-                <div class="preview-title">Предварительный просмотр</div>
+                <div class="panel-title">Предварительный просмотр</div>
                 <div class="preview-content" id="preview-content">
                     Здесь будет отображаться сгенерированный контент...
                 </div>
@@ -533,7 +483,7 @@
         </div>
 
         <div class="batch-controls">
-            <div class="batch-title">Пакетная генерация</div>
+            <div class="panel-title">Пакетная генерация</div>
             <div class="batch-grid">
                 <div class="batch-item" onclick="generateBatch(5)">
                     <div class="batch-number">5</div>
@@ -582,21 +532,16 @@
 
             // Показываем состояние генерации
             const generatorPanel = document.querySelector('.generator-panel');
+            const previewPanel = document.querySelector('.preview-panel');
             generatorPanel.classList.add('generating');
+            previewPanel.classList.add('generating');
 
             // Имитация генерации контента
             setTimeout(() => {
-                const sampleContent = `📱 ${theme.toUpperCase()} - ${audience.toUpperCase()}
-
-🎯 Целевая аудитория: ${audience}
-📝 Шаблон: ${template}
-
-${generateSampleContent(template, theme, audience, requirements)}
-
-#UXUI #Design #${theme.replace('-', '')} #${audience}`;
-
+                const sampleContent = generateSampleContent(template, theme, audience, requirements);
                 document.getElementById('preview-content').textContent = sampleContent;
                 generatorPanel.classList.remove('generating');
+                previewPanel.classList.remove('generating');
             }, 2000);
         }
 
@@ -681,7 +626,7 @@ ${getRandomTip(theme)}
             return tips[theme] || 'Практика - лучший учитель';
         }
 
-        function saveTemplate() {
+        function saveTemplate(event) {
             const template = {
                 template: document.getElementById('template-select').value,
                 theme: document.getElementById('theme-select').value,
@@ -693,7 +638,11 @@ ${getRandomTip(theme)}
             localStorage.setItem('savedTemplate', JSON.stringify(template));
             
             // Показываем уведомление
-            alert('Шаблон сохранен!');
+            const btn = event.target;
+            btn.textContent = 'Сохранено!';
+            setTimeout(() => {
+                btn.innerHTML = '<span>💾</span> Сохранить шаблон';
+            }, 2000);
         }
 
         function generateBatch(count) {
