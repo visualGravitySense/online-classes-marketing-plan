@@ -5,66 +5,241 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление кампаниями - UX/UI Academy</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; color: #343a40; }
-        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
-        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1, h2 { color: #2c3e50; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3); }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; text-align: center; }
-        .summary-card { background: #f1f3f5; padding: 20px; border-radius: 10px; }
-        .summary-card h3 { font-size: 1.1em; color: #6c757d; margin-bottom: 10px; }
-        .summary-card .value { font-size: 1.8em; font-weight: 700; color: #343a40; }
-        .table-wrapper { overflow-x: auto; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        .table th { background-color: #e9ecef; }
-        .form-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .form-container { background: #fff; padding: 30px; border-radius: 12px; width: 500px; max-width: 90%; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .actions-cell { display: flex; gap: 10px; }
-        .btn-sm { padding: 5px 10px; font-size: 0.8em; }
-        .btn-edit { background-color: #3498db; color: white; }
-        .btn-delete { background-color: #e74c3c; color: white; }
-        .btn-stats { background-color: #28a745; color: white; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f7fa 0%, #d4eaf7 100%);
+            min-height: 100vh;
+            color: #34495e;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* Общий стиль для карточек */
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #26a69a, #42a5f5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::before {
+             content: '📢';
+        }
+
+        /* Стили для кнопок и форм */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(66, 165, 245, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 165, 245, 0.5);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
+            color: white;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 18px;
+            border: 1px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #42a5f5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #576574;
+            font-size: 0.95rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Таблица */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e6ed;
+            vertical-align: middle;
+        }
+
+        .table th {
+            background: transparent;
+            font-weight: 600;
+            color: #26a69a;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .table tr:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Сводка */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            text-align: center;
+        }
+
+        .summary-item {
+            text-align: left;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            border-top: 5px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-item.total-campaigns { border-top-color: #42a5f5; }
+        .summary-item.total-budget { border-top-color: #4dd0e1; }
+        .summary-item.total-spent { border-top-color: #26a69a; }
+        .summary-item.avg-cpa { border-top-color: #66bb6a; }
+
+
+        .summary-label {
+            color: #576574;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .summary-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #34495e;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: capitalize;
+        }
+        
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-paused {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-finished {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard">
         <div class="card">
-            <div class="header">
-                <h1>📢 Управление кампаниями</h1>
-                <button id="addCampaignBtn" class="btn btn-primary">Новая кампания</button>
-            </div>
+            <h1 class="section-title">Управление кампаниями</h1>
             <div class="summary-grid">
-                <div class="summary-card">
-                    <h3>Всего кампаний</h3>
-                    <p id="totalCampaigns" class="value">0</p>
+                <div class="summary-item total-campaigns">
+                    <div class="summary-label">Всего кампаний</div>
+                    <div class="summary-amount">5</div>
                 </div>
-                <div class="summary-card">
-                    <h3>Общий бюджет</h3>
-                    <p id="totalBudget" class="value">0 ₽</p>
+                <div class="summary-item total-budget">
+                    <div class="summary-label">Общий бюджет</div>
+                    <div class="summary-amount">500,000 ₽</div>
                 </div>
-                <div class="summary-card">
-                    <h3>Общие расходы</h3>
-                    <p id="totalCost" class="value">0 ₽</p>
+                <div class="summary-item total-spent">
+                    <div class="summary-label">Общие расходы</div>
+                    <div class="summary-amount">285,000 ₽</div>
                 </div>
-                <div class="summary-card">
-                    <h3>Итоговый CPA</h3>
-                    <p id="avgCPA" class="value">0 ₽</p>
+                <div class="summary-item avg-cpa">
+                    <div class="summary-label">Итоговый CPA</div>
+                    <div class="summary-amount">1,500 ₽</div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h2>Список кампаний</h2>
-            <div class="table-wrapper">
+            <h2 class="section-title" style="font-size: 1.5rem;">Список кампаний</h2>
+             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
@@ -79,220 +254,87 @@
                             <th>Действия</th>
                         </tr>
                     </thead>
-                    <tbody id="campaignsTableBody"></tbody>
+                    <tbody>
+                        <tr>
+                            <td>Продвижение "UX/UI Pro"</td>
+                            <td>Telegram Ads</td>
+                            <td>150,000 ₽</td>
+                            <td>120,000 ₽</td>
+                            <td>8,000</td>
+                            <td>80</td>
+                            <td>1,500 ₽</td>
+                            <td><span class="status-badge status-active">Активна</span></td>
+                            <td><button class="btn" style="padding: 8px 15px;">⚙️</button></td>
+                        </tr>
+                        <tr>
+                            <td>Летняя акция</td>
+                            <td>Google Ads</td>
+                            <td>200,000 ₽</td>
+                            <td>100,000 ₽</td>
+                            <td>12,500</td>
+                            <td>65</td>
+                            <td>1,538 ₽</td>
+                            <td><span class="status-badge status-active">Активна</span></td>
+                            <td><button class="btn" style="padding: 8px 15px;">⚙️</button></td>
+                        </tr>
+                        <tr>
+                            <td>Вебинар по Figma</td>
+                            <td>Facebook Ads</td>
+                            <td>50,000 ₽</td>
+                            <td>50,000 ₽</td>
+                            <td>4,200</td>
+                            <td>30</td>
+                            <td>1,667 ₽</td>
+                            <td><span class="status-badge status-finished">Завершена</span></td>
+                            <td><button class="btn" style="padding: 8px 15px;">⚙️</button></td>
+                        </tr>
+                        <tr>
+                            <td>Набор на "Mobile Design"</td>
+                            <td>VK Ads</td>
+                            <td>100,000 ₽</td>
+                            <td>15,000 ₽</td>
+                            <td>1,800</td>
+                            <td>12</td>
+                            <td>1,250 ₽</td>
+                            <td><span class="status-badge status-paused">На паузе</span></td>
+                            <td><button class="btn" style="padding: 8px 15px;">⚙️</button></td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
-    </div>
 
-    <!-- Форма добавления/редактирования -->
-    <div id="formPopup" class="form-popup">
-        <div class="form-container">
-            <form id="campaignForm">
-                <h2 id="formTitle">Новая кампания</h2>
-                <input type="hidden" id="campaignId" name="campaignId">
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="name">Название</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="source">Источник</label>
-                        <input type="text" id="source" name="source" placeholder="e.g., Telegram Ads">
-                    </div>
-                    <div class="form-group">
-                        <label for="budget">Бюджет (₽)</label>
-                        <input type="number" id="budget" name="budget" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="start_date">Дата начала</label>
-                        <input type="date" id="start_date" name="start_date">
-                    </div>
-                    <div class="form-group">
-                        <label for="end_date">Дата окончания</label>
-                        <input type="date" id="end_date" name="end_date">
-                    </div>
-                    <div class="form-group full-width" id="statusGroup" style="display:none;">
-                        <label for="status">Статус</label>
-                        <select id="status" name="status">
-                            <option value="active">Активна</option>
-                            <option value="paused">На паузе</option>
-                            <option value="finished">Завершена</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                    <button type="button" id="cancelBtn" class="btn">Отмена</button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">Сохранить</button>
-                </div>
-            </form>
+        <div class="card">
+             <h2 class="section-title" style="font-size: 1.5rem;">Новая кампания</h2>
+             <div class="form-grid">
+                 <div>
+                    <label class="form-label">Название кампании</label>
+                    <input type="text" class="form-input" placeholder="Название">
+                 </div>
+                 <div>
+                    <label class="form-label">Источник</label>
+                    <select class="form-select">
+                        <option>Telegram Ads</option>
+                        <option>Google Ads</option>
+                        <option>VK Ads</option>
+                        <option>Facebook Ads</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label class="form-label">Бюджет, ₽</label>
+                    <input type="number" class="form-input" placeholder="50000">
+                 </div>
+                  <div>
+                    <label class="form-label">Дата начала</label>
+                    <input type="date" class="form-input">
+                 </div>
+                 <div>
+                    <label class="form-label">Дата окончания</label>
+                    <input type="date" class="form-input">
+                 </div>
+             </div>
+             <button class="btn btn-primary" style="margin-top: 20px;">Создать кампанию</button>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const API_URL = 'http://127.0.0.1:5001/api/campaigns';
-
-            // UI Elements
-            const addBtn = document.getElementById('addCampaignBtn');
-            const formPopup = document.getElementById('formPopup');
-            const form = document.getElementById('campaignForm');
-            const cancelBtn = document.getElementById('cancelBtn');
-            const tableBody = document.getElementById('campaignsTableBody');
-            
-            // Summary cards
-            const totalCampaignsEl = document.getElementById('totalCampaigns');
-            const totalBudgetEl = document.getElementById('totalBudget');
-            const totalCostEl = document.getElementById('totalCost');
-            const avgCPA_El = document.getElementById('avgCPA');
-
-            let campaignsCache = [];
-
-            // --- Event Listeners ---
-            addBtn.addEventListener('click', () => {
-                resetForm();
-                formPopup.style.display = 'flex';
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                formPopup.style.display = 'none';
-            });
-
-            form.addEventListener('submit', handleFormSubmit);
-            tableBody.addEventListener('click', handleTableClick);
-
-            // --- Initial Load ---
-            loadCampaigns();
-
-            // --- Functions ---
-            function resetForm() {
-                form.reset();
-                document.getElementById('campaignId').value = '';
-                document.getElementById('formTitle').textContent = 'Новая кампания';
-                document.getElementById('saveBtn').textContent = 'Сохранить';
-                document.getElementById('statusGroup').style.display = 'none';
-            }
-
-            async function handleFormSubmit(e) {
-                e.preventDefault();
-                const campaignId = document.getElementById('campaignId').value;
-                const url = campaignId ? `${API_URL}/${campaignId}` : API_URL;
-                const method = campaignId ? 'PUT' : 'POST';
-
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                data.budget = parseFloat(data.budget);
-
-                try {
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result.error);
-                    alert(result.message);
-                    formPopup.style.display = 'none';
-                    loadCampaigns();
-                } catch (error) {
-                    alert(`Ошибка: ${error.message}`);
-                }
-            }
-
-            async function handleTableClick(e) {
-                const campaignId = e.target.closest('tr')?.dataset.campaignId;
-                if (!campaignId) return;
-                
-                if (e.target.classList.contains('btn-edit')) {
-                    const campaign = campaignsCache.find(c => c.id == campaignId);
-                    if (campaign) {
-                        document.getElementById('formTitle').textContent = 'Редактировать кампанию';
-                        document.getElementById('saveBtn').textContent = 'Обновить';
-                        document.getElementById('campaignId').value = campaign.id;
-                        document.getElementById('name').value = campaign.name;
-                        document.getElementById('source').value = campaign.source;
-                        document.getElementById('budget').value = campaign.budget;
-                        document.getElementById('start_date').value = campaign.start_date;
-                        document.getElementById('end_date').value = campaign.end_date;
-                        document.getElementById('status').value = campaign.status;
-                        document.getElementById('statusGroup').style.display = 'block';
-                        formPopup.style.display = 'flex';
-                    }
-                }
-
-                if (e.target.classList.contains('btn-delete')) {
-                    if (confirm('Вы уверены, что хотите удалить эту кампанию и всю связанную статистику?')) {
-                        deleteCampaign(campaignId);
-                    }
-                }
-            }
-
-            async function loadCampaigns() {
-                try {
-                    const response = await fetch(API_URL);
-                    campaignsCache = await response.json();
-                    renderTable(campaignsCache);
-                    updateSummary(campaignsCache);
-                } catch (error) {
-                    tableBody.innerHTML = `<tr><td colspan="9">Ошибка загрузки кампаний.</td></tr>`;
-                }
-            }
-            
-            async function deleteCampaign(id) {
-                try {
-                    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result.error);
-                    alert(result.message);
-                    loadCampaigns();
-                } catch (error) {
-                    alert(`Ошибка удаления: ${error.message}`);
-                }
-            }
-
-            function renderTable(campaigns) {
-                tableBody.innerHTML = '';
-                if (campaigns.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Нет активных кампаний.</td></tr>`;
-                    return;
-                }
-                campaigns.forEach(c => {
-                    const cost = c.total_cost || 0;
-                    const conversions = c.total_conversions || 0;
-                    const cpa = conversions > 0 ? (cost / conversions) : 0;
-                    const row = `
-                        <tr data-campaign-id="${c.id}">
-                            <td>${c.name}</td>
-                            <td>${c.source || 'N/A'}</td>
-                            <td>${c.budget.toLocaleString()} ₽</td>
-                            <td>${cost.toLocaleString()} ₽</td>
-                            <td>${c.total_clicks || 0}</td>
-                            <td>${conversions}</td>
-                            <td>${cpa.toFixed(2)} ₽</td>
-                            <td>${c.status}</td>
-                            <td class="actions-cell">
-                                <button class="btn btn-sm btn-stats">📊</button>
-                                <button class="btn btn-sm btn-edit">📝</button>
-                                <button class="btn btn-sm btn-delete">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                });
-            }
-
-            function updateSummary(campaigns) {
-                const totalCampaigns = campaigns.length;
-                const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);
-                const totalCost = campaigns.reduce((sum, c) => sum + (c.total_cost || 0), 0);
-                const totalConversions = campaigns.reduce((sum, c) => sum + (c.total_conversions || 0), 0);
-                const avgCPA = totalConversions > 0 ? totalCost / totalConversions : 0;
-
-                totalCampaignsEl.textContent = totalCampaigns;
-                totalBudgetEl.textContent = `${totalBudget.toLocaleString()} ₽`;
-                totalCostEl.textContent = `${totalCost.toLocaleString()} ₽`;
-                avgCPA_El.textContent = `${avgCPA.toFixed(2)} ₽`;
-            }
-        });
-    </script>
 </body>
 </html>

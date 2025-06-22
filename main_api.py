@@ -181,7 +181,7 @@ def logout():
 @app.route('/')
 @login_required
 def owner_dashboard():
-    return render_template('owner_dashboard.html')
+    return render_template('new_dashboard.html')
 
 @app.route('/api/owner/summary', methods=['GET'])
 @login_required
@@ -941,6 +941,18 @@ def student_analytics_page():
 @login_required
 def partner_program_page():
     return render_template('partner_program.html')
+
+@app.route('/telegram-bot')
+@login_required
+def telegram_bot_page():
+    """Открывает страницу Telegram Bot дашборда."""
+    return render_template('telegram_bot_main_dashboard.html')
+
+@app.route('/content-generator')
+@login_required
+def content_generator_page():
+    """Открывает страницу генератора контента."""
+    return render_template('content_generator_dashboard.html')
 
 if __name__ == '__main__':
     init_db() # Вызываем инициализацию БД при старте

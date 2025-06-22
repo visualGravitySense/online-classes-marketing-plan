@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UX/UI Academy - Главная панель управления</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,23 +14,23 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #d4eaf7 100%);
             min-height: 100vh;
-            color: #333;
+            color: #34495e;
             display: flex;
         }
 
         /* Боковое меню */
         .sidebar {
             width: 280px;
-            background: rgba(45, 55, 72, 0.95);
-            backdrop-filter: blur(15px);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            color: #34495e;
             padding: 30px 0;
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
             position: fixed;
             height: 100vh;
             overflow-y: auto;
@@ -47,7 +46,7 @@
         .logo {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
             border-radius: 15px;
             display: flex;
             align-items: center;
@@ -55,6 +54,7 @@
             font-size: 2rem;
             margin: 0 auto 15px;
             animation: pulse 2s infinite;
+            color: white;
         }
 
         @keyframes pulse {
@@ -65,7 +65,7 @@
         .sidebar-title {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -82,7 +82,7 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #a0aec0;
+            color: #8a96a3;
             font-weight: 600;
         }
 
@@ -95,18 +95,20 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            font-weight: 500;
         }
 
         .menu li:hover {
-            background: rgba(102, 126, 234, 0.1);
-            border-left-color: #667eea;
+            background: rgba(38, 166, 154, 0.1);
+            border-left-color: #26a69a;
+            color: #26a69a;
             transform: translateX(5px);
         }
 
         .menu li.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-left-color: #667eea;
-            color: #667eea;
+            background: rgba(38, 166, 154, 0.2);
+            border-left-color: #26a69a;
+            color: #26a69a;
         }
 
         .menu-icon {
@@ -122,7 +124,7 @@
         .main-content {
             flex: 1;
             margin-left: 280px;
-            padding: 20px;
+            padding: 30px;
             overflow-y: auto;
             min-height: 100vh;
         }
@@ -134,12 +136,12 @@
 
         /* Заголовок */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             position: relative;
             overflow: hidden;
         }
@@ -151,8 +153,8 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            animation: rainbow 3s linear infinite;
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
+            animation: rainbow 4s linear infinite;
         }
 
         @keyframes rainbow {
@@ -171,7 +173,7 @@
         .header-text h1 {
             font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a, #42a5f5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -179,7 +181,7 @@
         }
 
         .header-text p {
-            color: #666;
+            color: #576574;
             font-size: 1.1rem;
         }
 
@@ -187,8 +189,8 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 15px 25px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #34d399, #22c55e);
             color: white;
             border-radius: 50px;
             font-weight: 600;
@@ -196,8 +198,8 @@
         }
 
         @keyframes glow {
-            from { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5); }
-            to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
+            from { box-shadow: 0 0 15px rgba(52, 211, 153, 0.5); }
+            to { box-shadow: 0 0 25px rgba(52, 211, 153, 0.8); }
         }
 
         .status-dot {
@@ -205,7 +207,7 @@
             height: 12px;
             background: white;
             border-radius: 50%;
-            animation: blink 1s infinite;
+            animation: blink 1.5s infinite;
         }
 
         @keyframes blink {
@@ -215,47 +217,49 @@
 
         /* Статистика */
         .stats-overview {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: transparent;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: none;
             margin-bottom: 30px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
         }
 
         .stat-item {
             text-align: center;
             padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: 5px solid;
+            transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.2);
         }
 
-        .stat-item.revenue { border-left-color: #667eea; }
-        .stat-item.students { border-left-color: #4ecdc4; }
-        .stat-item.courses { border-left-color: #48bb78; }
-        .stat-item.profit { border-left-color: #ed8936; }
+        .stat-item.revenue { border-top-color: #42a5f5; }
+        .stat-item.students { border-top-color: #4dd0e1; }
+        .stat-item.courses { border-top-color: #26a69a; }
+        .stat-item.profit { border-top-color: #66bb6a; }
 
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #666;
+            color: #576574;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -270,22 +274,23 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.1);
         }
 
         .card h3 {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -306,7 +311,7 @@
         }
 
         .action-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
             color: white;
             border: none;
             padding: 15px 20px;
@@ -315,7 +320,7 @@
             font-size: 1rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(66, 165, 245, 0.3);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -323,7 +328,7 @@
 
         .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px rgba(66, 165, 245, 0.5);
         }
 
         /* Нижняя сетка */
@@ -342,24 +347,26 @@
 
         .table th,
         .table td {
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e0e6ed;
         }
 
         .table th {
-            background: #f8f9ff;
+            background: transparent;
             font-weight: 600;
-            color: #667eea;
+            color: #26a69a;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         .status-active {
-            color: #27ae60;
+            color: #34d399;
             font-weight: 600;
         }
 
         .status-pending {
-            color: #f39c12;
+            color: #f59e0b;
             font-weight: 600;
         }
 
@@ -376,12 +383,13 @@
 
         @media (max-width: 768px) {
             .sidebar {
-                width: 100px;
+                width: 80px;
                 padding: 10px 0;
             }
             
             .main-content {
-                margin-left: 100px;
+                margin-left: 80px;
+                padding: 15px;
             }
             
             .sidebar-title {
@@ -414,9 +422,9 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
             transform: translateX(-100%);
-            animation: loading-slide 2s ease-in-out infinite;
+            animation: loading-slide 3s ease-in-out infinite;
             z-index: 1000;
         }
 
@@ -715,10 +723,17 @@
                     datasets: [{
                         label: 'Выручка (₽)',
                         data: [320000, 450000, 380000, 520000, 485000, 600000],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#42a5f5',
+                        backgroundColor: 'rgba(66, 165, 245, 0.2)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#42a5f5',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#42a5f5',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7,
+                        pointRadius: 5
                     }]
                 },
                 options: {
@@ -735,7 +750,19 @@
                             ticks: {
                                 callback: function(value) {
                                     return new Intl.NumberFormat('ru-RU').format(value) + ' ₽';
-                                }
+                                },
+                                color: '#576574'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#576574'
+                            },
+                            grid: {
+                                display: false
                             }
                         }
                     }
@@ -744,4 +771,4 @@
         }
     </script>
 </body>
-</html>
+</html> 

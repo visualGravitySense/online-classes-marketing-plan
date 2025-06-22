@@ -17,24 +17,25 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #d4eaf7 100%);
             min-height: 100vh;
-            color: #333;
+            color: #34495e;
         }
 
         .dashboard {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
+        /* Заголовок с анимацией */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             position: relative;
             overflow: hidden;
         }
@@ -46,8 +47,8 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            animation: rainbow 3s linear infinite;
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
+            animation: rainbow 4s linear infinite;
         }
 
         @keyframes rainbow {
@@ -72,7 +73,8 @@
         .logo {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
+            color: white;
             border-radius: 15px;
             display: flex;
             align-items: center;
@@ -89,41 +91,56 @@
         .header-text h1 {
             font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #26a69a, #42a5f5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 5px;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         .header-text p {
-            color: #666;
+            color: #576574;
             font-size: 1.1rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .status-indicator, .status-indicator-offline {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 15px 25px;
+            padding: 12px 20px;
             color: white;
             border-radius: 50px;
             font-weight: 600;
             transition: all 0.5s ease-in-out;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
         }
 
         .status-indicator {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            animation: glow 2s ease-in-out infinite alternate;
+            background: linear-gradient(135deg, #34d399, #22c55e);
+            animation: glow 2s ease-in-out infinite alternate, fadeInUp 0.8s ease-out 0.4s both;
         }
         
         .status-indicator-offline {
             background: linear-gradient(135deg, #f56565, #c53030);
+            animation: fadeInUp 0.8s ease-out 0.4s both;
         }
 
         @keyframes glow {
-            from { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5); }
-            to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
+            from { box-shadow: 0 0 15px rgba(52, 211, 153, 0.5); }
+            to { box-shadow: 0 0 25px rgba(52, 211, 153, 0.8); }
         }
 
         .status-dot, .status-dot-offline {
@@ -135,7 +152,7 @@
 
         .status-dot {
             background: white;
-            animation: blink 1s infinite;
+            animation: blink 1.5s infinite;
         }
 
         .status-dot-offline {
@@ -147,65 +164,77 @@
             51%, 100% { opacity: 0.3; }
         }
 
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
+        /* Статистика */
         .stats-overview {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            background: transparent;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: none;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
         }
 
         .stat-item {
             text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: 5px solid;
+            transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.2);
         }
 
-        .stat-item.posts { border-left-color: #667eea; }
-        .stat-item.groups { border-left-color: #4ecdc4; }
-        .stat-item.success { border-left-color: #48bb78; }
-        .stat-item.pending { border-left-color: #ed8936; }
+        .stat-item.posts { border-top-color: #42a5f5; }
+        .stat-item.groups { border-top-color: #4dd0e1; }
+        .stat-item.success { border-top-color: #26a69a; }
+        .stat-item.pending { border-top-color: #66bb6a; }
 
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #666;
+            color: #576574;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .activity-feed, .charts-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .activity-feed, .charts-section, .quick-actions, .groups-section {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .activity-feed:hover, .charts-section:hover, .quick-actions:hover, .groups-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.1);
         }
 
         .activity-feed {
@@ -226,26 +255,34 @@
         .section-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
+        .section-title::before {
+            font-size: 1.2em;
+        }
+        .charts-section .section-title::before { content: '📊'; }
+        .activity-feed .section-title::before { content: '📝'; }
+        .quick-actions .section-title::before { content: '⚡'; }
+        .groups-section .section-title::before { content: '👥'; }
+
         .activity-item {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 10px;
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.6);
             transition: all 0.3s ease;
         }
 
         .activity-item:hover {
-            background: #e9ecef;
+            background: #fff;
             transform: translateX(5px);
         }
 
@@ -260,10 +297,10 @@
             color: white;
         }
 
-        .activity-icon.success { background: #48bb78; }
-        .activity-icon.warning { background: #ed8936; }
-        .activity-icon.error { background: #f56565; }
-        .activity-icon.info { background: #4299e1; }
+        .activity-icon.success { background: linear-gradient(135deg, #34d399, #22c55e); }
+        .activity-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .activity-icon.error { background: linear-gradient(135deg, #f87171, #ef4444); }
+        .activity-icon.info { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
 
         .activity-content {
             flex: 1;
@@ -271,44 +308,90 @@
 
         .activity-text {
             font-weight: 500;
-            color: #2d3748;
+            color: #34495e;
             margin-bottom: 3px;
         }
 
         .activity-time {
             font-size: 0.8rem;
-            color: #718096;
+            color: #576574;
         }
 
+        /* Быстрые действия */
         .quick-actions {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 1s both;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
 
         .action-button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(135deg, #26a69a 0%, #42a5f5 100%);
+        }
+
+        .action-button.success {
+            background: linear-gradient(135deg, #34d399, #22c55e);
+        }
+
+        .action-button.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .action-button.danger {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+        /* Группы */
+        .groups-section {
+            animation: fadeInUp 0.8s ease-out 1.2s both;
         }
 
         .groups-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
 
         .group-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(15px);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid white;
         }
 
         .group-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.15);
         }
 
         .group-header {
@@ -320,7 +403,7 @@
 
         .group-name {
             font-weight: 600;
-            color: #2d3748;
+            color: #34495e;
             font-size: 1.1rem;
         }
 
@@ -329,6 +412,16 @@
             border-radius: 10px;
             font-size: 0.7rem;
             font-weight: 600;
+        }
+
+        .group-status.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .group-status.paused {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .group-stats {
@@ -344,23 +437,25 @@
         .group-stat-number {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #34495e;
         }
 
         .group-stat-label {
             font-size: 0.7rem;
-            color: #666;
+            color: #576574;
             text-transform: uppercase;
         }
 
         .group-next-post {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.5);
             padding: 10px;
             border-radius: 8px;
             font-size: 0.9rem;
-            color: #666;
+            color: #576574;
+            border: 1px solid #e0e6ed;
         }
 
+        /* Адаптивность */
         @media (max-width: 1200px) {
             .main-grid,
             .charts-section {
@@ -369,17 +464,25 @@
         }
 
         @media (max-width: 768px) {
+            .dashboard {
+                padding: 15px;
+            }
+            
             .header-content {
                 flex-direction: column;
                 text-align: center;
+            }
+            
+            .header-text h1 {
+                font-size: 1.8rem;
             }
             
             .stats-grid {
                 grid-template-columns: 1fr;
             }
             
-            .quick-actions {
-                flex-direction: column;
+            .action-buttons {
+                grid-template-columns: 1fr;
             }
             
             .groups-grid {
@@ -394,253 +497,398 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
             transform: translateX(-100%);
-            animation: loading-slide 2s ease-in-out infinite;
+            animation: loading-slide 3s ease-in-out infinite;
             z-index: 1000;
         }
 
         @keyframes loading-slide {
             0% { transform: translateX(-100%); }
-            50% { transform: translateX(0%); }
             100% { transform: translateX(100%); }
+        }
+
+        /* Улучшенные состояния */
+        .processing {
+            position: relative;
+        }
+
+        .processing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .processing::before {
+            content: '🔄 Обработка...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            font-weight: 600;
+            color: #42a5f5;
         }
     </style>
 </head>
 <body>
-    <div class="loading-animation" id="loadingBar"></div>
-    
+    <!-- Анимация загрузки -->
+    <div class="loading-animation"></div>
+
     <div class="dashboard">
         <div class="header">
             <div class="header-content">
                 <div class="logo-section">
                     <div class="logo">🤖</div>
                     <div class="header-text">
-                        <h1>Главная панель Telegram Бота</h1>
-                        <p>Обзор и управление активностью</p>
+                        <h1>Telegram Bot Dashboard</h1>
+                        <p>Автоматическая публикация постов в Telegram каналы</p>
                     </div>
                 </div>
-                <div id="status-indicator" class="status-indicator">
-                    <div id="status-dot" class="status-dot"></div>
-                    <span id="status-text">Бот в сети</span>
+                <div class="status-indicator" id="bot-status">
+                    <div class="status-dot"></div>
+                    <span>Бот активен</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stats-grid">
+                <div class="stat-item posts">
+                    <div class="stat-number" id="total-posts">1,247</div>
+                    <div class="stat-label">Всего постов</div>
+                </div>
+                <div class="stat-item groups">
+                    <div class="stat-number" id="active-groups">8</div>
+                    <div class="stat-label">Активных групп</div>
+                </div>
+                <div class="stat-item success">
+                    <div class="stat-number" id="successful-posts">1,189</div>
+                    <div class="stat-label">Успешных публикаций</div>
+                </div>
+                <div class="stat-item pending">
+                    <div class="stat-number" id="pending-posts">15</div>
+                    <div class="stat-label">В очереди</div>
                 </div>
             </div>
         </div>
 
         <div class="main-grid">
-            <div class="stats-overview">
-                <div class="section-title">
-                    <span>📊</span> Общая статистика
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item posts">
-                        <div id="total-posts" class="stat-number">1,284</div>
-                        <div class="stat-label">Всего постов</div>
+            <div class="activity-feed">
+                <div class="section-title">Последние действия</div>
+                <div id="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon success">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Пост опубликован в группе "UX/UI Design"</div>
+                            <div class="activity-time">2 минуты назад</div>
+                        </div>
                     </div>
-                    <div class="stat-item groups">
-                        <div id="total-groups" class="stat-number">4</div>
-                        <div class="stat-label">Подключено групп</div>
+                    <div class="activity-item">
+                        <div class="activity-icon info">📝</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Новый пост добавлен в очередь</div>
+                            <div class="activity-time">5 минут назад</div>
+                        </div>
                     </div>
-                    <div class="stat-item success">
-                        <div id="published-posts" class="stat-number">972</div>
-                        <div class="stat-label">Опубликовано</div>
+                    <div class="activity-item">
+                        <div class="activity-icon warning">⚠️</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Ошибка подключения к группе "Design Tips"</div>
+                            <div class="activity-time">10 минут назад</div>
+                        </div>
                     </div>
-                    <div class="stat-item pending">
-                        <div id="pending-posts" class="stat-number">312</div>
-                        <div class="stat-label">В очереди</div>
+                    <div class="activity-item">
+                        <div class="activity-icon success">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Пост опубликован в группе "Figma Community"</div>
+                            <div class="activity-time">15 минут назад</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="activity-feed">
-                <h2 class="section-title">
-                    <span>📢</span> Лента активности
-                </h2>
-                <div id="activity-feed-list">
-                    <div class="activity-item">
-                        <div class="activity-icon success">✅</div>
-                        <div class="activity-content">
-                            <div class="activity-text">Пост в "UX/UI Academy" успешно опубликован.</div>
-                            <div class="activity-time">2 минуты назад</div>
-                        </div>
-                    </div>
-                     <div class="activity-item">
-                        <div class="activity-icon info">ℹ️</div>
-                        <div class="activity-content">
-                            <div class="activity-text">Запланирован новый пост в "Design News".</div>
-                            <div class="activity-time">1 час назад</div>
-                        </div>
-                    </div>
-                     <div class="activity-item">
-                        <div class="activity-icon error">❌</div>
-                        <div class="activity-content">
-                            <div class="activity-text">Ошибка публикации в "Test Channel": неверный chat_id.</div>
-                            <div class="activity-time">3 часа назад</div>
-                        </div>
-                    </div>
-                     <div class="activity-item">
-                        <div class="activity-icon success">✅</div>
-                        <div class="activity-content">
-                            <div class="activity-text">Пост в "UX/UI Academy" успешно опубликован.</div>
-                            <div class="activity-time">5 часов назад</div>
-                        </div>
-                    </div>
-                     <div class="activity-item">
-                        <div class="activity-icon info">ℹ️</div>
-                        <div class="activity-content">
-                            <div class="activity-text">Бот успешно перезапущен.</div>
-                            <div class="activity-time">8 часов назад</div>
-                        </div>
-                    </div>
+            <div class="charts-section">
+                <div class="section-title">Статистика публикаций</div>
+                <div class="chart-container">
+                    <canvas id="postsChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="bottom-grid">
-             <div class="charts-section">
-                 <h2 class="section-title">
-                    <span>📈</span> Статистика публикаций за неделю
-                </h2>
-                <div class="chart-container">
-                    <canvas id="publicationsChart"></canvas>
-                </div>
+        <div class="quick-actions">
+            <div class="section-title">Быстрые действия</div>
+            <div class="action-buttons">
+                <button class="action-button primary" onclick="addNewPost(event)">
+                    <span>📝</span>
+                    Добавить пост
+                </button>
+                <button class="action-button success" onclick="startScheduler(event)">
+                    <span>▶️</span>
+                    Запустить планировщик
+                </button>
+                <button class="action-button warning" onclick="pauseScheduler(event)">
+                    <span>⏸️</span>
+                    Остановить планировщик
+                </button>
+                <button class="action-button danger" onclick="clearQueue(event)">
+                    <span>🗑️</span>
+                    Очистить очередь
+                </button>
             </div>
+        </div>
 
-            <div class="quick-actions">
-                 <h2 class="section-title">
-                    <span>⚡</span> Быстрые действия
-                </h2>
-                <div class="action-buttons">
-                    <button class="action-button">
-                        <span>🔄</span> Перезапустить бота
-                    </button>
-                     <button class="action-button">
-                        <span>➕</span> Добавить группу
-                    </button>
-                     <button class="action-button">
-                        <span>-</span> Удалить группу
-                    </button>
+        <div class="groups-section">
+            <div class="section-title">Управление группами</div>
+            <div class="groups-grid" id="groups-grid">
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">UX/UI Design</div>
+                        <div class="group-status active">Активна</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">156</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">2.5k</div>
+                            <div class="group-stat-label">Подписчиков</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Следующий пост: через 2 часа
+                    </div>
+                </div>
+
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">Figma Community</div>
+                        <div class="group-status active">Активна</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">89</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">1.8k</div>
+                            <div class="group-stat-label">Подписчиков</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Следующий пост: через 4 часа
+                    </div>
+                </div>
+
+                <div class="group-card">
+                    <div class="group-header">
+                        <div class="group-name">Design Tips</div>
+                        <div class="group-status paused">Приостановлена</div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="group-stat-number">234</div>
+                            <div class="group-stat-label">Постов</div>
+                        </div>
+                        <div class="group-stat">
+                            <div class="group-stat-number">3.2k</div>
+                            <div class="group-stat-label">Подписчиков</div>
+                        </div>
+                    </div>
+                    <div class="group-next-post">
+                        Планировщик остановлен
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        let publicationsChart;
+        // Инициализация Chart.js
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadBotStats();
+            startRealTimeUpdates();
+        });
 
-        const iconMap = {
-            success: '✅',
-            info: 'ℹ️',
-            error: '❌',
-            warning: '⚠️'
-        };
-
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('http://127.0.0.1:5001/api/telegram/main_summary');
-                if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
-                const data = await response.json();
-                
-                updateStatus(data.bot_status);
-                updateStats(data.stats);
-                updateActivityFeed(data.recent_activities);
-                renderChart(data.charts.publications);
-
-            } catch (error) {
-                console.error("Failed to load main dashboard data:", error);
-                const body = document.querySelector('.dashboard');
-                body.innerHTML = `<div style="color: white; text-align: center; padding: 50px; background: rgba(0,0,0,0.3); border-radius: 20px;"><h2>Ошибка загрузки данных.</h2><p>${error.message}</p><p>Убедитесь, что API сервер (main_api.py) запущен.</p></div>`;
-            }
-        }
-
-        function updateStatus(status) {
-            const indicator = document.getElementById('status-indicator');
-            const dot = document.getElementById('status-dot');
-            const text = document.getElementById('status-text');
+        function initializeCharts() {
+            const ctx = document.getElementById('postsChart').getContext('2d');
             
-            if (indicator) {
-                indicator.className = status.online ? 'status-indicator' : 'status-indicator-offline';
-            }
-            if (dot) {
-                dot.className = status.online ? 'status-dot' : 'status-dot-offline';
-            }
-            if (text) {
-                text.textContent = status.message;
-            }
-        }
-
-        function updateStats(stats) {
-            document.getElementById('total-posts').textContent = stats.total_posts;
-            document.getElementById('total-groups').textContent = stats.total_groups;
-            document.getElementById('published-posts').textContent = stats.published_posts;
-            document.getElementById('pending-posts').textContent = stats.pending_posts;
-        }
-
-        function updateActivityFeed(activities) {
-            const feedList = document.getElementById('activity-feed-list');
-            feedList.innerHTML = '';
-            if (!activities || activities.length === 0) {
-                feedList.innerHTML = '<p style="color: #666; text-align: center; padding-top: 20px;">Нет недавних активностей.</p>';
-                return;
-            }
-            activities.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'activity-item';
-                div.innerHTML = `
-                    <div class="activity-icon ${item.type}">${iconMap[item.type] || '⚙️'}</div>
-                    <div class="activity-content">
-                        <div class="activity-text">${item.text}</div>
-                        <div class="activity-time">${item.time}</div>
-                    </div>`;
-                feedList.appendChild(div);
-            });
-        }
-
-        function renderChart(chartData) {
-            const ctx = document.getElementById('publicationsChart').getContext('2d');
-            if (publicationsChart) {
-                publicationsChart.destroy();
-            }
-            publicationsChart = new Chart(ctx, {
-                type: 'bar',
+            new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: chartData.labels,
-                    datasets: [
-                        {
-                            label: 'Опубликовано',
-                            data: chartData.published,
-                            backgroundColor: 'rgba(72, 187, 120, 0.6)',
-                            borderColor: 'rgba(72, 187, 120, 1)',
-                            borderWidth: 1,
-                            borderRadius: 5
-                        },
-                        {
-                            label: 'Запланировано',
-                            data: chartData.scheduled,
-                            backgroundColor: 'rgba(66, 153, 225, 0.6)',
-                            borderColor: 'rgba(66, 153, 225, 1)',
-                            borderWidth: 1,
-                            borderRadius: 5
-                        }
-                    ]
+                    labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                    datasets: [{
+                        label: 'Публикации',
+                        data: [12, 19, 15, 25, 22, 18, 24],
+                        borderColor: '#42a5f5',
+                        backgroundColor: 'rgba(66, 165, 245, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#42a5f5',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#42a5f5',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7,
+                        pointRadius: 5
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true }
-                    },
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                color: '#576574'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#576574'
+                            }
+                        }
                     }
                 }
             });
         }
-        
-        loadDashboardData();
-        setInterval(loadDashboardData, 30000); // Обновлять каждые 30 секунд
-    });
+
+        function loadBotStats() {
+            fetch('/api/telegram/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.stats) {
+                        document.getElementById('total-posts').textContent = data.stats.totalPosts;
+                        document.getElementById('active-groups').textContent = data.stats.activeGroups;
+                        document.getElementById('successful-posts').textContent = data.stats.successfulPosts;
+                        document.getElementById('pending-posts').textContent = data.stats.pendingPosts;
+                    }
+                })
+                .catch(error => console.error('Ошибка загрузки статистики:', error));
+        }
+
+        function startRealTimeUpdates() {
+            // Обновление статуса бота каждые 30 секунд
+            setInterval(() => {
+                fetch('/api/telegram/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusElement = document.getElementById('bot-status');
+                        if (data.status === 'online') {
+                            statusElement.className = 'status-indicator';
+                            statusElement.innerHTML = '<div class="status-dot"></div><span>Бот активен</span>';
+                        } else {
+                            statusElement.className = 'status-indicator-offline';
+                            statusElement.innerHTML = '<div class="status-dot-offline"></div><span>Бот неактивен</span>';
+                        }
+                    })
+                    .catch(error => console.error('Ошибка проверки статуса:', error));
+            }, 30000);
+        }
+
+        function addNewPost(event) {
+            const button = event.target.closest('.action-button');
+            button.classList.add('processing');
+            
+            setTimeout(() => {
+                button.classList.remove('processing');
+                alert('Функция добавления поста будет реализована');
+            }, 2000);
+        }
+
+        function startScheduler(event) {
+            const button = event.target.closest('.action-button');
+            button.classList.add('processing');
+            
+            fetch('/api/telegram/scheduler/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    button.classList.remove('processing');
+                    if (data.success) {
+                        alert('Планировщик запущен!');
+                    } else {
+                        alert('Ошибка запуска планировщика');
+                    }
+                })
+                .catch(error => {
+                    button.classList.remove('processing');
+                    console.error('Ошибка:', error);
+                    alert('Ошибка запуска планировщика');
+                });
+        }
+
+        function pauseScheduler(event) {
+            const button = event.target.closest('.action-button');
+            button.classList.add('processing');
+            
+            fetch('/api/telegram/scheduler/pause', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    button.classList.remove('processing');
+                    if (data.success) {
+                        alert('Планировщик остановлен!');
+                    } else {
+                        alert('Ошибка остановки планировщика');
+                    }
+                })
+                .catch(error => {
+                    button.classList.remove('processing');
+                    console.error('Ошибка:', error);
+                    alert('Ошибка остановки планировщика');
+                });
+        }
+
+        function clearQueue(event) {
+            if (confirm('Вы уверены, что хотите очистить очередь постов?')) {
+                const button = event.target.closest('.action-button');
+                button.classList.add('processing');
+                
+                fetch('/api/telegram/queue/clear', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        button.classList.remove('processing');
+                        if (data.success) {
+                            alert('Очередь очищена!');
+                            loadBotStats(); // Обновляем статистику
+                        } else {
+                            alert('Ошибка очистки очереди');
+                        }
+                    })
+                    .catch(error => {
+                        button.classList.remove('processing');
+                        console.error('Ошибка:', error);
+                        alert('Ошибка очистки очереди');
+                    });
+            }
+        }
     </script>
 </body>
 </html>
