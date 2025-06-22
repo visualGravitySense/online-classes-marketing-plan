@@ -178,7 +178,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
             const API_BASE_URL = 'http://127.0.0.1:5001/api/courses';
             const courseForm = document.getElementById('courseForm');
             const courseFormContainer = document.getElementById('courseFormContainer');
@@ -336,7 +336,7 @@
                     coursesTableBody.insertAdjacentHTML('beforeend', row);
                 });
             }
-        });
+        })();
     </script>
 </body>
 </html> 
