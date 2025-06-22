@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор контента - Telegram Bot</title>
+    <title>Генератор контента - UX/UI Academy</title>
     <style>
         * {
             margin: 0;
@@ -13,17 +13,18 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             color: #333;
         }
 
         .dashboard {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
 
+        /* Заголовок с анимацией */
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
@@ -32,6 +33,24 @@
             margin-bottom: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .header h1 {
@@ -42,11 +61,72 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 10px;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         .header p {
             color: #666;
             font-size: 1.1rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Статистика */
+        .stats-overview {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-item.queue { border-left-color: #667eea; }
+        .stat-item.generated { border-left-color: #48bb78; }
+        .stat-item.total { border-left-color: #ed8936; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .main-grid {
@@ -54,6 +134,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
         }
 
         .generator-panel {
@@ -62,6 +143,11 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .generator-panel:hover {
+            transform: translateY(-2px);
         }
 
         .panel-title {
@@ -74,6 +160,11 @@
             gap: 10px;
         }
 
+        .panel-title::before {
+            content: '✍️';
+            font-size: 1.2em;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -83,31 +174,35 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: #4a5568;
+            font-size: 0.95rem;
         }
 
         .form-select, .form-input, .form-textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 15px 18px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
             background: white;
+            font-family: inherit;
         }
 
         .form-select:focus, .form-input:focus, .form-textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
         }
 
         .form-textarea {
             min-height: 120px;
             resize: vertical;
+            line-height: 1.6;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 15px 28px;
             border: none;
             border-radius: 12px;
             font-size: 1rem;
@@ -116,7 +211,24 @@
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn-primary {
@@ -143,6 +255,7 @@
             display: flex;
             gap: 15px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         .preview-panel {
@@ -153,10 +266,30 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             max-height: 600px;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .preview-panel:hover {
+            transform: translateY(-2px);
+        }
+
+        .preview-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-title::before {
+            content: '👁️';
+            font-size: 1.2em;
         }
 
         .preview-content {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             padding: 20px;
@@ -164,7 +297,13 @@
             white-space: pre-wrap;
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .preview-content:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
         }
 
         .batch-controls {
@@ -174,6 +313,22 @@
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .batch-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .batch-title::before {
+            content: '🔄';
+            font-size: 1.2em;
         }
 
         .batch-grid {
@@ -186,18 +341,20 @@
         .batch-item {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             border-left: 5px solid #667eea;
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
 
         .batch-item:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
         }
 
         .batch-number {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: #667eea;
             margin-bottom: 10px;
@@ -206,229 +363,343 @@
         .batch-label {
             color: #666;
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        /* Адаптивность */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .batch-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
         }
 
         @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
+            .dashboard {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
             }
             
             .btn-group {
                 flex-direction: column;
             }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Анимация загрузки */
+        .loading-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: translateX(-100%);
+            animation: loading-slide 2s ease-in-out infinite;
+            z-index: 1000;
+        }
+
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Улучшенные состояния */
+        .generating {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .generating::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+        }
+
+        .generating::before {
+            content: '🔄 Генерация...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            font-weight: 600;
+            color: #667eea;
         }
     </style>
 </head>
 <body>
+    <!-- Анимация загрузки -->
+    <div class="loading-animation"></div>
+
     <div class="dashboard">
         <div class="header">
-            <h1>✍️ Генератор Контента</h1>
-            <p>Создавайте, просматривайте и управляйте контентом для Telegram</p>
+            <h1>Генератор контента</h1>
+            <p>Создавайте качественный контент для ваших курсов и социальных сетей</p>
         </div>
 
-        <div class="batch-controls">
-            <div class="panel-title">📊 Статистика</div>
-            <div class="batch-grid">
-                <div class="batch-item">
-                    <div class="batch-number" id="postsInQueue">...</div>
-                    <div class="batch-label">Постов в очереди</div>
+        <div class="stats-overview">
+            <div class="stats-grid">
+                <div class="stat-item queue">
+                    <div class="stat-number" id="posts-in-queue">15</div>
+                    <div class="stat-label">В очереди</div>
                 </div>
-                <div class="batch-item">
-                    <div class="batch-number" id="generatedToday">...</div>
-                    <div class="batch-label">Сгенерировано сегодня</div>
+                <div class="stat-item generated">
+                    <div class="stat-number" id="generated-today">7</div>
+                    <div class="stat-label">Сгенерировано сегодня</div>
                 </div>
-                <div class="batch-item">
-                    <div class="batch-number" id="totalInDb">...</div>
-                    <div class="batch-label">Всего в базе</div>
+                <div class="stat-item total">
+                    <div class="stat-number" id="total-posts">1,247</div>
+                    <div class="stat-label">Всего постов</div>
                 </div>
             </div>
         </div>
 
         <div class="main-grid">
             <div class="generator-panel">
-                <div class="panel-title">⚙️ Параметры генерации</div>
-                <form id="generatorForm">
-                    <div class="form-group">
-                        <label for="templateSelect" class="form-label">Шаблон</label>
-                        <select id="templateSelect" class="form-select" disabled></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="themeSelect" class="form-label">Тема</label>
-                        <select id="themeSelect" class="form-select" disabled></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="audienceSelect" class="form-label">Целевая аудитория</label>
-                        <select id="audienceSelect" class="form-select" disabled></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="customPrompt" class="form-label">Дополнительные инструкции (необязательно)</label>
-                        <textarea id="customPrompt" class="form-textarea" placeholder="Например: 'Сделай пост более формальным', 'Добавь emoji'"></textarea>
-                    </div>
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-primary">
-                            <span>🚀</span> Сгенерировать пост
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="preview-panel">
-                <div class="panel-title">👀 Предпросмотр</div>
-                <div id="alert-container"></div>
-                <div class="loading" id="loadingSpinner">
-                    <div class="spinner"></div>
-                    <p>Магия в процессе... AI генерирует текст.</p>
+                <div class="panel-title">Настройки генерации</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Шаблон контента</label>
+                    <select class="form-select" id="template-select">
+                        <option value="universal">Universal Content Template</option>
+                        <option value="news">News Post</option>
+                        <option value="promotional">Promotional Post</option>
+                        <option value="educational">Educational Post</option>
+                    </select>
                 </div>
-                <div class="preview-content" id="previewContent" style="display: none;">
-                    Здесь появится сгенерированный текст...
+
+                <div class="form-group">
+                    <label class="form-label">Тематика</label>
+                    <select class="form-select" id="theme-select">
+                        <option value="ux-ui-basics">UX/UI Design Basics</option>
+                        <option value="figma-tricks">Figma Tricks</option>
+                        <option value="career-it">Career in IT</option>
+                        <option value="mobile-design">Mobile Design</option>
+                    </select>
                 </div>
-                 <div class="btn-group" id="action-buttons" style="display: none;">
-                    <button id="saveButton" class="btn btn-secondary">
-                        <span>💾</span> Сохранить в базу
+
+                <div class="form-group">
+                    <label class="form-label">Целевая аудитория</label>
+                    <select class="form-select" id="audience-select">
+                        <option value="juniors">Juniors</option>
+                        <option value="designers">Designers</option>
+                        <option value="freelancers">Freelancers</option>
+                        <option value="students">Students</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Дополнительные требования</label>
+                    <textarea class="form-textarea" id="requirements" placeholder="Опишите дополнительные требования к контенту..."></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateContent()">
+                        <span>🚀</span>
+                        Сгенерировать контент
                     </button>
+                    <button class="btn btn-secondary" onclick="saveTemplate()">
+                        <span>💾</span>
+                        Сохранить шаблон
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="preview-title">Предварительный просмотр</div>
+                <div class="preview-content" id="preview-content">
+                    Здесь будет отображаться сгенерированный контент...
                 </div>
             </div>
         </div>
 
+        <div class="batch-controls">
+            <div class="batch-title">Пакетная генерация</div>
+            <div class="batch-grid">
+                <div class="batch-item" onclick="generateBatch(5)">
+                    <div class="batch-number">5</div>
+                    <div class="batch-label">Постов</div>
+                </div>
+                <div class="batch-item" onclick="generateBatch(10)">
+                    <div class="batch-number">10</div>
+                    <div class="batch-label">Постов</div>
+                </div>
+                <div class="batch-item" onclick="generateBatch(20)">
+                    <div class="batch-number">20</div>
+                    <div class="batch-label">Постов</div>
+                </div>
+                <div class="batch-item" onclick="generateBatch(50)">
+                    <div class="batch-number">50</div>
+                    <div class="batch-label">Постов</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Загрузка статистики
         document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardData();
-            document.getElementById('generatorForm').addEventListener('submit', handleGeneration);
+            loadContentStats();
         });
 
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('http://127.0.0.1:5001/api/content/summary');
-                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                
-                const data = await response.json();
-                
-                updateStats(data.stats);
-                updateSelects(data.options);
-
-            } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-                showAlert(`Не удалось загрузить данные. ${error.message}`, 'error');
-            }
+        function loadContentStats() {
+            fetch('/api/content/summary')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.stats) {
+                        document.getElementById('posts-in-queue').textContent = data.stats.postsInQueue;
+                        document.getElementById('generated-today').textContent = data.stats.generatedToday;
+                        document.getElementById('total-posts').textContent = data.stats.totalInDb;
+                    }
+                })
+                .catch(error => console.error('Ошибка загрузки статистики:', error));
         }
 
-        function updateStats(stats) {
-            document.getElementById('postsInQueue').textContent = stats.postsInQueue;
-            document.getElementById('generatedToday').textContent = stats.generatedToday;
-            document.getElementById('totalInDb').textContent = stats.totalInDb;
-        }
+        function generateContent() {
+            const template = document.getElementById('template-select').value;
+            const theme = document.getElementById('theme-select').value;
+            const audience = document.getElementById('audience-select').value;
+            const requirements = document.getElementById('requirements').value;
 
-        function updateSelects(options) {
-            populateSelect('templateSelect', options.templates);
-            populateSelect('themeSelect', options.themes);
-            populateSelect('audienceSelect', options.audiences);
-        }
-        
-        function populateSelect(selectId, optionsArray) {
-            const select = document.getElementById(selectId);
-            select.innerHTML = '';
-            if (optionsArray && optionsArray.length > 0) {
-                optionsArray.forEach(optionText => {
-                    const option = document.createElement('option');
-                    option.value = optionText;
-                    option.textContent = optionText;
-                    select.appendChild(option);
-                });
-                select.disabled = false;
-            } else {
-                const option = document.createElement('option');
-                option.textContent = 'Нет данных';
-                select.appendChild(option);
-                select.disabled = true;
-            }
-        }
+            // Показываем состояние генерации
+            const generatorPanel = document.querySelector('.generator-panel');
+            generatorPanel.classList.add('generating');
 
-        async function handleGeneration(event) {
-            event.preventDefault();
-            
-            const previewContent = document.getElementById('previewContent');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const actionButtons = document.getElementById('action-buttons');
-            
-            loadingSpinner.style.display = 'block';
-            previewContent.style.display = 'none';
-            actionButtons.style.display = 'none';
-            clearAlerts();
-            
-            // Симуляция задержки ответа от AI. 
-            // TODO: Заменить на реальный fetch запрос к API генерации.
+            // Имитация генерации контента
             setTimeout(() => {
-                loadingSpinner.style.display = 'none';
+                const sampleContent = `📱 ${theme.toUpperCase()} - ${audience.toUpperCase()}
+
+🎯 Целевая аудитория: ${audience}
+📝 Шаблон: ${template}
+
+${generateSampleContent(template, theme, audience, requirements)}
+
+#UXUI #Design #${theme.replace('-', '')} #${audience}`;
+
+                document.getElementById('preview-content').textContent = sampleContent;
+                generatorPanel.classList.remove('generating');
+            }, 2000);
+        }
+
+        function generateSampleContent(template, theme, audience, requirements) {
+            const templates = {
+                universal: `Узнайте секреты успешного дизайна! 
+
+🔍 Основные принципы:
+• Простота и ясность
+• Консистентность элементов
+• Интуитивная навигация
+
+💡 Практический совет:
+Используйте правило 8px для создания гармоничных отступов между элементами.
+
+🎨 Цветовая палитра:
+- Основной: #667eea
+- Дополнительный: #764ba2
+- Акцентный: #48bb78
+
+Хотите узнать больше? Присоединяйтесь к нашему курсу!`,
                 
-                const theme = document.getElementById('themeSelect').value;
-                const audience = document.getElementById('audienceSelect').value;
+                news: `🔥 НОВОСТЬ: ${theme.toUpperCase()}
+
+📢 Важное обновление в мире дизайна!
+
+Что изменилось:
+✅ Новые возможности
+✅ Улучшенный интерфейс
+✅ Расширенная функциональность
+
+⏰ Время на изучение: 15 минут
+📈 Уровень сложности: ${audience === 'juniors' ? 'Начинающий' : 'Средний'}
+
+Подробности в комментариях 👇`,
                 
-                const mockResponse = `**Тема:** ${theme}\n**Аудитория:** ${audience}\n\n**Контент:**\n\nПривет, будущий дизайнер! 🚀\n\nДавайте разберемся, что такое UX и UI, и почему это важно.\n\n- **UX (User Experience)** - это то, КАК пользователь взаимодействует с продуктом. Удобно ли ему? Понятно ли? \n- **UI (User Interface)** - это то, КАК продукт выглядит. Кнопочки, цвета, шрифты.\n\nХороший продукт - это когда красивый UI помогает создать отличный UX!\n\n#UX #UI #Design #Beginner`;
+                promotional: `🎉 СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ!
 
-                previewContent.textContent = mockResponse;
-                previewContent.style.display = 'block';
-                actionButtons.style.display = 'flex';
+${theme.toUpperCase()} - Курс для ${audience}
 
-                showAlert('Контент успешно сгенерирован!', 'success');
-            }, 1500);
+💰 Цена: ~~2999₽~~ 1999₽
+⏰ До конца акции: 3 дня
+🎁 Бонус: Бесплатный доступ к закрытому чату
+
+Что вы получите:
+✅ 20+ уроков
+✅ Практические задания
+✅ Сертификат
+✅ Поддержка 24/7
+
+🔥 Успейте забронировать место!`,
+                
+                educational: `📚 ОБУЧАЮЩИЙ МАТЕРИАЛ
+
+${theme.toUpperCase()} - Основы для ${audience}
+
+📖 Что изучаем:
+1. Основные принципы
+2. Инструменты и технологии
+3. Практические примеры
+4. Лучшие практики
+
+💡 Совет дня:
+${getRandomTip(theme)}
+
+📝 Домашнее задание:
+Создайте простой макет, используя изученные принципы.
+
+Поделитесь результатами в комментариях!`
+            };
+
+            return templates[template] || templates.universal;
         }
 
-        function showAlert(message, type = 'success') {
-            const container = document.getElementById('alert-container');
-            container.innerHTML = ''; // Очищаем предыдущие сообщения
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            container.appendChild(alertDiv);
-
-            setTimeout(() => alertDiv.remove(), 5000);
-        }
-        
-        function clearAlerts() {
-            document.getElementById('alert-container').innerHTML = '';
+        function getRandomTip(theme) {
+            const tips = {
+                'ux-ui-basics': 'Всегда думайте о пользователе при создании интерфейса',
+                'figma-tricks': 'Используйте компоненты для ускорения работы',
+                'career-it': 'Постоянно изучайте новые технологии',
+                'mobile-design': 'Адаптируйте дизайн под размеры экрана'
+            };
+            return tips[theme] || 'Практика - лучший учитель';
         }
 
+        function saveTemplate() {
+            const template = {
+                template: document.getElementById('template-select').value,
+                theme: document.getElementById('theme-select').value,
+                audience: document.getElementById('audience-select').value,
+                requirements: document.getElementById('requirements').value
+            };
+
+            // Сохранение в localStorage
+            localStorage.setItem('savedTemplate', JSON.stringify(template));
+            
+            // Показываем уведомление
+            alert('Шаблон сохранен!');
+        }
+
+        function generateBatch(count) {
+            alert(`Запущена генерация ${count} постов...`);
+            // Здесь будет логика пакетной генерации
+        }
     </script>
 </body>
-</html> 
+</html>
