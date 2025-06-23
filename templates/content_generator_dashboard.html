@@ -276,7 +276,7 @@
 
         .batch-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -340,24 +340,6 @@
             }
         }
 
-        /* Анимация загрузки */
-        .loading-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #80cbc4, #4dd0e1, #4fc3f7, #64b5f6, #81c784);
-            transform: translateX(-100%);
-            animation: loading-slide 3s ease-in-out infinite;
-            z-index: 1000;
-        }
-
-        @keyframes loading-slide {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
         /* Улучшенные состояния */
         .generating {
             position: relative;
@@ -397,9 +379,6 @@
     </style>
 </head>
 <body>
-    <!-- Анимация загрузки -->
-    <div class="loading-animation"></div>
-
     <div class="dashboard">
         <div class="header">
             <h1>Генератор контента</h1>
@@ -489,7 +468,7 @@
                     <div class="batch-number">5</div>
                     <div class="batch-label">Постов</div>
                 </div>
-                <div class="batch-item" onclick="generateBatch(10)">
+                 <div class="batch-item" onclick="generateBatch(10)">
                     <div class="batch-number">10</div>
                     <div class="batch-label">Постов</div>
                 </div>
