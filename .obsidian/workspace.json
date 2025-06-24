@@ -194,13 +194,17 @@
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
-      "command-palette:Open command palette": false
+      "command-palette:Open command palette": false,
+      "obsidian-excalidraw-plugin:New drawing": false
     }
   },
   "active": "2d6ce8c859de8f51",
   "lastOpenFiles": [
-    "community/get started plan.md",
+    "Excalidraw/Drawing 2025-06-23 12.42.41.excalidraw.md",
+    "photo_5965127168444977111_w.jpg",
     "content-folder/content-strategy/UXUI дизайн для Junior.md",
+    "Excalidraw",
+    "community/get started plan.md",
     "content-folder/auto-bot/UX UI Неделя 1.md",
     "community/segments/Freelancers.md",
     "community/segments/Developers.md",
@@ -234,16 +238,12 @@
     "gt-ignore/img/Pasted image 20250615163631.png",
     "gt-ignore/img/Pasted image 20250615163604.png",
     "gt-ignore/img/Pasted image 20250615163552.png",
-    "gt-ignore/img/Pasted image 20250615163531.png",
     "gt-ignore/img",
     "gt-ignore",
     "gt-igore/img",
-    "gt-igore",
     "content-folder/introduction/Что вы получите в результате курса.md",
     "content-folder/introduction/about-teacher.md",
     "🍕 Знакомство с проектом FoodFlow.md",
-    "about-teacher.md",
-    "Что вы получите в результате курса.md",
-    "Обзор того, что будет сделано в рамках 3 уроков.md"
+    "about-teacher.md"
   ]
 }
