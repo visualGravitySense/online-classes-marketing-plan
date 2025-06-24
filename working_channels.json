@@ -1,0 +1,92 @@
+{
+  "designer_lfe": {
+    "chat_id": "-1001903756368",
+    "name": "Жизнь Дизайнера",
+    "active": true,
+    "campaign": "default",
+    "target_audience": "Designers",
+    "description": "Жизнь Дизайнера - сообщество для графических дизайнеров",
+    "username": "designer_lfe",
+    "type": "channel"
+  },
+  "digo_online_schools": {
+    "chat_id": "-1002316535443",
+    "name": "Разработка продукта для услуг на основе машинного обучения: Product Design & ML",
+    "active": true,
+    "campaign": "default",
+    "target_audience": "Developers",
+    "description": "Product Design & ML - для разработчиков и IT-специалистов",
+    "username": "digo_online_schools",
+    "type": "channel"
+  },
+  "digoGraphickDesign": {
+    "chat_id": "-1002091962525",
+    "name": "UX/UI с нуля",
+    "active": true,
+    "campaign": "default",
+    "target_audience": "Freelancers",
+    "description": "Сообщество фрилансеров и самоучек",
+    "username": "uxuitopro",
+    "type": "channel"
+  },
+  "digoUI": {
+    "chat_id": "-1002123538949",
+    "name": "digoUI",
+    "active": true,
+    "campaign": "default",
+    "target_audience": "Juniors",
+    "description": "UX/UI для новичков и джуниоров",
+    "username": "uxuichanel",
+    "type": "channel"
+  },
+  "biznes_automation": {
+    "chat_id": "-1002067947486",
+    "name": "DataMastery: Python & BI Insights",
+    "active": true,
+    "campaign": "digitalizacija",
+    "target_audience": "Managers",
+    "description": "Кейсы автоматизации бизнес-процессов",
+    "username": "DataMasteryBI",
+    "type": "channel"
+  },
+  "startup_digital": {
+    "chat_id": "-1002378611875",
+    "name": "Crypto-Wise",
+    "active": true,
+    "campaign": "digitalizacija",
+    "target_audience": "Entrepreneurs",
+    "description": "Цифровизация для стартапов и предпринимателей",
+    "username": "cryptowisedev",
+    "type": "channel"
+  },
+  "digitalizacija_community": {
+    "chat_id": "-1002126649365",
+    "name": "Краудфандинговый Путь: Развивай свой проект с нами!",
+    "active": true,
+    "campaign": "digitalizacija",
+    "target_audience": "All",
+    "description": "Основная группа участников курса",
+    "username": "amoecrowd",
+    "type": "channel"
+  },
+  "biznes_consulting": {
+    "chat_id": "-1001903756368",
+    "name": "Жизнь Дизайнера",
+    "active": true,
+    "campaign": "digitalizacija",
+    "target_audience": "Consultants",
+    "description": "Группа консультаций по цифровизации",
+    "username": "designer_lfe",
+    "type": "channel"
+  },
+  "automation_tips": {
+    "chat_id": "-1002316535443",
+    "name": "Разработка продукта для услуг на основе машинного обучения: Product Design & ML",
+    "active": true,
+    "campaign": "digitalizacija",
+    "target_audience": "All",
+    "description": "Советы по автоматизации бизнеса",
+    "username": "digo_online_schools",
+    "type": "channel"
+  }
+}
