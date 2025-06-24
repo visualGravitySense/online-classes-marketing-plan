@@ -21,11 +21,13 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from dotenv import load_dotenv
+import asyncio
 
 # Добавляем путь к модулям
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from config import BOT_TOKEN, ADMIN_ID, ALL_CHANNELS, POST_TEMPLATES, POSTING_SCHEDULE
+# Импортируем из локального config.py
+from config import BOT_TOKEN, ADMIN_ID, ALL_CHANNELS, POSTING_SCHEDULE, POST_TEMPLATES
 from database import Database
 from scheduler import PostScheduler
 from integrated_content_generator import ContentGenerator
@@ -55,18 +57,18 @@ class UniversalBot:
         self.db = Database('data/posts.db')
         self.content_generator = ContentGenerator()
         
+        # Статус компонентов (инициализируем ПЕРЕД планировщиками)
+        self.components_status = {
+            'schedulers': {},
+            'content_generator': False
+        }
+        
         # Инициализируем планировщики для каждой кампании
         self.schedulers = {}
         self.initialize_schedulers()
         
         # Регистрируем обработчики команд
         self.register_handlers()
-        
-        # Статус компонентов
-        self.components_status = {
-            'schedulers': {},
-            'content_generator': False
-        }
     
     def initialize_schedulers(self):
         """Инициализация планировщиков для каждой кампании"""
@@ -350,6 +352,123 @@ class UniversalBot:
         
         await message.reply(f"📢 Выберите канал для поста в кампании {campaign.upper()}:", reply_markup=keyboard)
     
+    async def add_post(self, message: types.Message):
+        """Добавить новый пост"""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        campaigns = self.get_available_campaigns()
+        
+        # Создаем кнопки для выбора кампании
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=campaign.upper(), callback_data=f"add_post_{campaign}")]
+            for campaign in campaigns
+        ])
+        
+        await message.reply("🎯 Выберите кампанию для добавления поста:", reply_markup=keyboard)
+    
+    async def schedule_post(self, message: types.Message):
+        """Запланировать пост"""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        campaigns = self.get_available_campaigns()
+        
+        # Создаем кнопки для выбора кампании
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=campaign.upper(), callback_data=f"schedule_{campaign}")]
+            for campaign in campaigns
+        ])
+        
+        await message.reply("🎯 Выберите кампанию для планирования поста:", reply_markup=keyboard)
+    
+    async def show_schedule(self, message: types.Message):
+        """Показать расписание постов"""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        # Получаем запланированные посты из базы данных
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT p.*, c.name as channel_name 
+            FROM posts p 
+            LEFT JOIN channels c ON p.channel_id = c.chat_id
+            WHERE p.published = FALSE 
+            ORDER BY p.scheduled_time ASC
+            LIMIT 20
+        ''')
+        
+        posts = cursor.fetchall()
+        conn.close()
+        
+        if not posts:
+            await message.reply("📅 Нет запланированных постов")
+            return
+        
+        schedule_text = "📅 ЗАПЛАНИРОВАННЫЕ ПОСТЫ\n\n"
+        
+        for post in posts:
+            scheduled_time = datetime.fromisoformat(post['scheduled_time'])
+            schedule_text += f"🕐 {scheduled_time.strftime('%d.%m.%Y %H:%M')}\n"
+            schedule_text += f"📢 {post['channel_name'] or post['channel_id']}\n"
+            schedule_text += f"📝 {post['content'][:100]}...\n"
+            schedule_text += "─" * 30 + "\n"
+        
+        await message.reply(schedule_text)
+    
+    async def show_analytics(self, message: types.Message):
+        """Показать детальную аналитику"""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        campaigns = self.get_available_campaigns()
+        
+        # Создаем кнопки для выбора кампании
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=campaign.upper(), callback_data=f"analytics_{campaign}")]
+            for campaign in campaigns
+        ])
+        
+        await message.reply("📊 Выберите кампанию для детальной аналитики:", reply_markup=keyboard)
+    
+    async def show_campaign_stats(self, message: types.Message):
+        """Показать статистику кампаний"""
+        if message.from_user.id != ADMIN_ID:
+            return
+
+        campaigns = self.get_available_campaigns()
+        
+        stats_text = "📊 СТАТИСТИКА КАМПАНИЙ\n\n"
+        
+        for campaign in campaigns:
+            channels = self.get_campaign_channels(campaign)
+            active_channels = [ch for ch in channels.values() if ch.get('active', True)]
+            
+            status = "🟢 Активна" if self.components_status['schedulers'].get(campaign, False) else "🔴 Неактивна"
+            
+            stats_text += f"📌 {campaign.upper()}\n"
+            stats_text += f"   Статус: {status}\n"
+            stats_text += f"   Каналов: {len(active_channels)}/{len(channels)}\n"
+            stats_text += "   " + "─" * 30 + "\n"
+        
+        await message.reply(stats_text)
+    
+    async def show_campaign_schedule(self, message: types.Message, campaign: str):
+        """Показать расписание кампании"""
+        channels = self.get_campaign_channels(campaign)
+        
+        schedule_text = f"📅 РАСПИСАНИЕ КАМПАНИИ: {campaign.upper()}\n\n"
+        
+        for channel_id, channel_data in channels.items():
+            schedule_text += f"📢 {channel_data['name']}\n"
+            schedule_text += f"   ID: {channel_id}\n"
+            schedule_text += f"   Статус: {'✅ Активен' if channel_data.get('active', True) else '❌ Неактивен'}\n"
+            schedule_text += "   " + "─" * 20 + "\n"
+        
+        await message.reply(schedule_text)
+    
     async def generate_content(self, message: types.Message):
         """Генерация контента"""
         if message.from_user.id != ADMIN_ID:
@@ -516,6 +635,5 @@ class UniversalBot:
         await self.dp.start_polling(self.bot)
 
 if __name__ == '__main__':
-    import asyncio
     bot = UniversalBot()
     asyncio.run(bot.run()) 

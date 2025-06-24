@@ -60,8 +60,10 @@ class PostScheduler:
     def _check_and_publish_posts(self):
         """Check for pending posts and publish them."""
         try:
-            # Run the async function in the thread's event loop
-            self.loop.run_until_complete(self._process_pending_posts())
+            # Создаем задачу в event loop
+            task = self.loop.create_task(self._process_pending_posts())
+            # Ждем завершения задачи
+            self.loop.run_until_complete(task)
         except Exception as e:
             logger.error(f"Error checking posts: {str(e)}")
 
@@ -90,30 +92,46 @@ class PostScheduler:
             
             logger.info(f"Publishing post {post['id']} to {channel_id}")
             
+            # Добавляем timeout для API вызовов
+            timeout = 30  # 30 секунд
+            
             # Handle media if present
             if post['media_path'] and post['media_type']:
                 if post['media_type'] == 'photo':
-                    await self.bot.send_photo(
-                        chat_id=channel_id,
-                        photo=open(post['media_path'], 'rb'),
-                        caption=content
+                    await asyncio.wait_for(
+                        self.bot.send_photo(
+                            chat_id=channel_id,
+                            photo=open(post['media_path'], 'rb'),
+                            caption=content
+                        ),
+                        timeout=timeout
                     )
                 elif post['media_type'] == 'video':
-                    await self.bot.send_video(
-                        chat_id=channel_id,
-                        video=open(post['media_path'], 'rb'),
-                        caption=content
+                    await asyncio.wait_for(
+                        self.bot.send_video(
+                            chat_id=channel_id,
+                            video=open(post['media_path'], 'rb'),
+                            caption=content
+                        ),
+                        timeout=timeout
                     )
             else:
-                await self.bot.send_message(
-                    chat_id=channel_id,
-                    text=content
+                await asyncio.wait_for(
+                    self.bot.send_message(
+                        chat_id=channel_id,
+                        text=content
+                    ),
+                    timeout=timeout
                 )
             
             # Mark post as published
             self.db.mark_post_published(post['id'])
             logger.info(f"Successfully published post {post['id']} to {channel_id}")
             
+        except asyncio.TimeoutError:
+            error_msg = f"Timeout publishing post {post['id']} to {channel_id}"
+            logger.error(error_msg)
+            self.db.mark_post_published(post['id'], error_msg)
         except Exception as e:
             error_msg = f"Failed to publish post {post['id']}: {str(e)}"
             logger.error(error_msg)

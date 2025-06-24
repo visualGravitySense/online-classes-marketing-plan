@@ -309,7 +309,7 @@ def get_universal_bot_campaigns():
 def create_universal_bot_campaign():
     """Создание новой кампании"""
     try:
-        data = request.get_json()
+    data = request.get_json()
         
         if BOT_INTEGRATION_AVAILABLE:
             # Используем реальную логику создания кампании

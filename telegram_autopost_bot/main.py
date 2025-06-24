@@ -1,9 +1,13 @@
 import logging
 import os
+import sys
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+# Добавляем путь к текущей папке для импорта локального config
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import BOT_TOKEN, ADMIN_ID, CHANNELS, POST_TEMPLATES
 from database import Database
 from scheduler import PostScheduler
