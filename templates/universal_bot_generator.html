@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор контента - Universal Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .generator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .preview-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .preview-content {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 200px;
+            margin-bottom: 20px;
+        }
+
+        .preview-placeholder {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .generated-content {
+            display: none;
+        }
+
+        .content-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .content-hashtags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .hashtag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .content-cta {
+            background: rgba(72, 187, 120, 0.1);
+            color: #38a169;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .generator-container { grid-template-columns: 1fr; }
+            .preview-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Генератор контента</h1>
+                    <p>Создавайте качественный контент для ваших кампаний</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="generator-container">
+            <!-- Форма генерации -->
+            <div class="form-section">
+                <h2 class="section-title">Параметры генерации</h2>
+                
+                <form id="generatorForm">
+                    <div class="form-group">
+                        <label class="form-label">Тема *</label>
+                        <input type="text" class="form-input" id="topic" placeholder="Например: UX/UI дизайн для начинающих" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Кампания</label>
+                        <select class="form-select" id="campaign">
+                            <option value="">Выберите кампанию</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Тон</label>
+                        <select class="form-select" id="tone">
+                            <option value="professional">Профессиональный</option>
+                            <option value="casual">Неформальный</option>
+                            <option value="friendly">Дружелюбный</option>
+                            <option value="formal">Формальный</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Длина</label>
+                        <select class="form-select" id="length">
+                            <option value="short">Короткий (до 100 слов)</option>
+                            <option value="medium" selected>Средний (100-200 слов)</option>
+                            <option value="long">Длинный (200+ слов)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Целевая аудитория</label>
+                        <input type="text" class="form-input" id="targetAudience" placeholder="Например: начинающие дизайнеры">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Платформа</label>
+                        <select class="form-select" id="platform">
+                            <option value="telegram" selected>Telegram</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="linkedin">LinkedIn</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeHashtags" checked>
+                        <label for="includeHashtags">Включить хештеги</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeCallToAction" checked>
+                        <label for="includeCallToAction">Включить призыв к действию</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Дополнительные инструкции</label>
+                        <textarea class="form-textarea" id="additionalInstructions" placeholder="Дополнительные пожелания к контенту..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span>✨</span>
+                        Сгенерировать контент
+                    </button>
+                </form>
+            </div>
+
+            <!-- Предварительный просмотр -->
+            <div class="preview-section">
+                <h2 class="section-title">Предварительный просмотр</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Генерируем контент...</p>
+                </div>
+
+                <div class="preview-content" id="previewContent">
+                    <div class="preview-placeholder">
+                        Заполните форму и нажмите "Сгенерировать контент"
+                    </div>
+                </div>
+
+                <div class="generated-content" id="generatedContent">
+                    <div class="content-text" id="contentText"></div>
+                    <div class="content-hashtags" id="contentHashtags"></div>
+                    <div class="content-cta" id="contentCta"></div>
+                    
+                    <div class="preview-actions">
+                        <button class="btn btn-primary" onclick="saveContent()">
+                            <span>💾</span>
+                            Сохранить
+                        </button>
+                        <button class="btn btn-secondary" onclick="regenerateContent()">
+                            <span>🔄</span>
+                            Перегенерировать
+                        </button>
+                        <button class="btn btn-secondary" onclick="scheduleContent()">
+                            <span>📅</span>
+                            Запланировать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCampaigns();
+            setupForm();
+        });
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/universal-bot/campaigns');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('campaign');
+                    data.data.forEach(campaign => {
+                        const option = document.createElement('option');
+                        option.value = campaign.id;
+                        option.textContent = campaign.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки кампаний:', error);
+            }
+        }
+
+        function setupForm() {
+            document.getElementById('generatorForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await generateContent();
+            });
+        }
+
+        async function generateContent() {
+            const formData = {
+                topic: document.getElementById('topic').value,
+                campaign: document.getElementById('campaign').value,
+                tone: document.getElementById('tone').value,
+                length: document.getElementById('length').value,
+                targetAudience: document.getElementById('targetAudience').value,
+                platform: document.getElementById('platform').value,
+                include_hashtags: document.getElementById('includeHashtags').checked,
+                include_call_to_action: document.getElementById('includeCallToAction').checked,
+                additionalInstructions: document.getElementById('additionalInstructions').value
+            };
+
+            // Показываем загрузку
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('generatedContent').style.display = 'none';
+            document.getElementById('previewContent').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/universal-bot/generate-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayGeneratedContent(data.data);
+                } else {
+                    alert(data.error || 'Ошибка генерации контента');
+                }
+            } catch (error) {
+                console.error('Ошибка генерации контента:', error);
+                alert('Ошибка генерации контента');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayGeneratedContent(content) {
+            document.getElementById('contentText').textContent = content.content;
+            
+            // Отображаем хештеги
+            const hashtagsContainer = document.getElementById('contentHashtags');
+            hashtagsContainer.innerHTML = '';
+            if (content.hashtags && content.hashtags.length > 0) {
+                content.hashtags.forEach(hashtag => {
+                    const tag = document.createElement('span');
+                    tag.className = 'hashtag';
+                    tag.textContent = hashtag;
+                    hashtagsContainer.appendChild(tag);
+                });
+            }
+            
+            // Отображаем призыв к действию
+            const ctaContainer = document.getElementById('contentCta');
+            if (content.call_to_action) {
+                ctaContainer.textContent = content.call_to_action;
+                ctaContainer.style.display = 'block';
+            } else {
+                ctaContainer.style.display = 'none';
+            }
+            
+            document.getElementById('generatedContent').style.display = 'block';
+        }
+
+        async function saveContent() {
+            const content = {
+                content: document.getElementById('contentText').textContent,
+                hashtags: Array.from(document.querySelectorAll('.hashtag')).map(tag => tag.textContent),
+                call_to_action: document.getElementById('contentCta').textContent,
+                campaign: document.getElementById('campaign').value,
+                platform: document.getElementById('platform').value
+            };
+
+            try {
+                const response = await fetch('/api/universal-bot/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(content)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Контент сохранен!');
+                } else {
+                    alert(data.error || 'Ошибка сохранения контента');
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения контента:', error);
+                alert('Ошибка сохранения контента');
+            }
+        }
+
+        function regenerateContent() {
+            generateContent();
+        }
+
+        function scheduleContent() {
+            const content = {
+                content: document.getElementById('contentText').textContent,
+                hashtags: Array.from(document.querySelectorAll('.hashtag')).map(tag => tag.textContent),
+                call_to_action: document.getElementById('contentCta').textContent,
+                campaign: document.getElementById('campaign').value,
+                platform: document.getElementById('platform').value
+            };
+
+            // Сохраняем контент в localStorage для передачи на страницу планирования
+            localStorage.setItem('generatedContent', JSON.stringify(content));
+            window.location.href = '/universal-bot/schedule';
+        }
+    </script>
+</body>
+</html> 

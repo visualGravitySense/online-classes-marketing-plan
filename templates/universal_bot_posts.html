@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление постами - Universal Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+        }
+
+        .post-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(102, 126, 234, 0.2);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .post-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-draft { background: rgba(156, 163, 175, 0.1); color: #6b7280; }
+        .status-scheduled { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .status-published { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .status-failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .post-content {
+            margin-bottom: 20px;
+        }
+
+        .post-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-success { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #f56565, #e53e3e); color: white; }
+        .btn-info { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-content {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .filter-input, .filter-select {
+            padding: 10px 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .posts-grid { grid-template-columns: 1fr; }
+            .filters-content { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Управление постами</h1>
+                    <p>Создавайте, редактируйте и планируйте публикации</p>
+                </div>
+                <button class="btn btn-primary" onclick="createPost()">
+                    <span>➕</span>
+                    Новый пост
+                </button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filters-content">
+                <div class="filter-group">
+                    <label class="filter-label">Поиск</label>
+                    <input type="text" class="filter-input" placeholder="Текст поста..." id="searchInput">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Статус</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Все статусы</option>
+                        <option value="draft">Черновики</option>
+                        <option value="scheduled">Запланированные</option>
+                        <option value="published">Опубликованные</option>
+                        <option value="failed">Ошибки</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Кампания</label>
+                    <select class="filter-select" id="campaignFilter">
+                        <option value="">Все кампании</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="posts-grid" id="postsGrid">
+            <!-- Посты будут загружены динамически -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+            loadCampaigns();
+        });
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/universal-bot/posts');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderPosts(data.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки постов:', error);
+            }
+        }
+
+        function renderPosts(posts) {
+            const grid = document.getElementById('postsGrid');
+            grid.innerHTML = '';
+
+            if (posts.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #666; grid-column: 1 / -1;">
+                        <h3>Посты не найдены</h3>
+                        <p>Создайте первый пост для начала работы</p>
+                    </div>
+                `;
+                return;
+            }
+
+            posts.forEach(post => {
+                const card = createPostCard(post);
+                grid.appendChild(card);
+            });
+        }
+
+        function createPostCard(post) {
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            
+            const statusClass = `status-${post.status}`;
+            const statusText = getStatusText(post.status);
+            
+            card.innerHTML = `
+                <div class="post-header">
+                    <div class="post-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="post-content">
+                    <div class="post-text">${post.content.substring(0, 200)}${post.content.length > 200 ? '...' : ''}</div>
+                </div>
+                <div class="post-meta">
+                    <span>Кампания: ${post.campaign}</span>
+                    <span>${formatDate(post.created_at)}</span>
+                </div>
+                <div class="post-actions">
+                    <button class="btn btn-sm btn-info" onclick="editPost('${post.id}')">Редактировать</button>
+                    <button class="btn btn-sm btn-success" onclick="schedulePost('${post.id}')">Запланировать</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePost('${post.id}')">Удалить</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'draft': 'Черновик',
+                'scheduled': 'Запланирован',
+                'published': 'Опубликован',
+                'failed': 'Ошибка'
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ru-RU');
+        }
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/universal-bot/campaigns');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('campaignFilter');
+                    data.data.forEach(campaign => {
+                        const option = document.createElement('option');
+                        option.value = campaign.id;
+                        option.textContent = campaign.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки кампаний:', error);
+            }
+        }
+
+        function createPost() {
+            window.location.href = '/universal-bot/posts/create';
+        }
+
+        function editPost(postId) {
+            window.location.href = `/universal-bot/posts/${postId}/edit`;
+        }
+
+        function schedulePost(postId) {
+            window.location.href = `/universal-bot/posts/${postId}/schedule`;
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('Вы уверены, что хотите удалить этот пост?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/universal-bot/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadPosts();
+                    alert('Пост удален');
+                }
+            } catch (error) {
+                console.error('Ошибка удаления поста:', error);
+                alert('Ошибка удаления поста');
+            }
+        }
+
+        // Обновление данных каждые 30 секунд
+        setInterval(() => {
+            loadPosts();
+        }, 30000);
+    </script>
+</body>
+</html> 

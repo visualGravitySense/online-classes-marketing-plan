@@ -5,6 +5,9 @@ import os
 from config import DATABASE_PATH, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
 from datetime import datetime, timedelta
 from functools import wraps
+import time
+import sys
+from dataclasses import asdict
 
 # Создаем приложение Flask
 app = Flask(__name__)
@@ -16,6 +19,20 @@ app.config['SECRET_KEY'] = SECRET_KEY
 # Путь к базам данных
 POSTS_DB_PATH = 'data/posts.db'
 TELEGRAM_DB_PATH = DATABASE_PATH
+
+# ===== ИМПОРТ ИНТЕГРАЦИИ С БОТОМ =====
+# Добавляем путь к папке с ботом
+bot_path = os.path.join(os.path.dirname(__file__), 'telegram_autopost_bot')
+sys.path.append(bot_path)
+
+try:
+    from bot_integration import bot_integration
+    BOT_INTEGRATION_AVAILABLE = True
+    print("✅ Интеграция с ботом подключена")
+except ImportError as e:
+    print(f"⚠️  Предупреждение: Не удалось импортировать интеграцию с ботом: {e}")
+    print("   Система будет работать в тестовом режиме")
+    BOT_INTEGRATION_AVAILABLE = False
 
 def get_db_connection(db_path):
     """Создает соединение с базой данных."""
@@ -177,782 +194,547 @@ def logout():
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('login'))
 
-# --- API эндпоинты ---
+# --- Основные маршруты ---
 @app.route('/')
+def index():
+    return redirect(url_for('owner_dashboard'))
+
+@app.route('/owner-dashboard')
 @login_required
 def owner_dashboard():
-    return render_template('new_dashboard.html')
+    return render_template('owner_dashboard.html')
 
-@app.route('/api/owner/summary', methods=['GET'])
+# ===== API ЭНДПОИНТЫ ДЛЯ УНИВЕРСАЛЬНОГО БОТА =====
+
+@app.route('/api/universal-bot/dashboard', methods=['GET'])
 @login_required
-def get_owner_summary():
-    """
-    Эндпоинт для главной панели владельца.
-    Собирает агрегированные данные со всей системы.
-    """
+def get_universal_bot_dashboard():
+    """Получение данных дашборда универсального бота"""
     try:
-        # --- Финансовые показатели (пока что статичные) ---
-        financials = {
-            'totalRevenue': 2847500,
-            'profitMargin': 68,
-            'monthly': {
-                'grossRevenue': 485700,
-                'expenses': 156200,
-                'netProfit': 329500
-            }
-        }
-
-        # --- Данные по студентам (статичные) ---
-        students = {
-            'total': 1247,
-            'satisfaction': 94,
-            'completionRate': 87,
-            'ltv': 38450,
-            'cac': 4200
-        }
-
-        # --- Данные по курсам (статичные) ---
-        courses = {
-            'active': 12,
-            'topByProfit': [
-                {'name': 'UX/UI Pro', 'share': 35},
-                {'name': 'Mobile Design', 'share': 25},
-                {'name': 'Design Systems', 'share': 20},
-                {'name': 'UX Research', 'share': 12},
-                {'name': 'Figma Mastery', 'share': 8}
-            ]
-        }
-        
-        # --- Динамика доходов для графика (статичные) ---
-        revenue_dynamics = {
-            'labels': ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
-            'revenue': [320000, 385000, 420000, 465000, 485000, 510000],
-            'profit': [190000, 245000, 275000, 310000, 329500, 350000]
-        }
-
-        # --- Собираем все в один ответ ---
-        summary = {
-            'financials': financials,
-            'students': students,
-            'courses': courses,
-            'charts': {
-                'revenue': revenue_dynamics
-            }
-        }
-
-        return jsonify(summary)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/content/summary', methods=['GET'])
-def get_content_summary():
-    """
-    Эндпоинт для дашборда генерации контента.
-    Возвращает статистику по постам и доступные опции для генерации.
-    """
-    try:
-        # --- Статистика по постам ---
-        conn_posts = get_db_connection(POSTS_DB_PATH)
-        total_posts = conn_posts.execute('SELECT COUNT(id) FROM posts').fetchone()[0]
-        # TODO: Добавить подсчет постов "в очереди" и "сгенерировано сегодня"
-        conn_posts.close()
-
-        stats = {
-            'postsInQueue': 15, # Заглушка
-            'generatedToday': 7, # Заглушка
-            'totalInDb': total_posts
-        }
-
-        # --- Опции для генерации (пока статичные) ---
-        options = {
-            'templates': ['Universal Content Template', 'News Post', 'Promotional Post'],
-            'themes': ['UX/UI Design Basics', 'Figma Tricks', 'Career in IT', 'Mobile Design'],
-            'audiences': ['Juniors', 'Designers', 'Freelancers', 'Students']
-        }
-
-        summary = {
-            'stats': stats,
-            'options': options
-        }
-
-        return jsonify(summary)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/scheduled_posts', methods=['GET'])
-def get_scheduled_posts():
-    """
-    Возвращает запланированные посты для календаря.
-    Принимает 'year' и 'month' как параметры запроса.
-    """
-    year = request.args.get('year')
-    month = request.args.get('month')
-
-    if not year or not month:
-        return jsonify({'error': 'Year and month parameters are required'}), 400
-
-    try:
-        # Формируем строку для поиска по месяцу, например, '2024-07%'
-        month_str = f"{year}-{int(month):02d}-"
-        
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        # Считаем количество постов на каждый день указанного месяца
-        query = """
-        SELECT 
-            strftime('%Y-%m-%d', scheduled_date) as post_day, 
-            COUNT(id) as post_count
-        FROM posts
-        WHERE scheduled_date LIKE ?
-        GROUP BY post_day
-        """
-        posts_by_day = conn_tg.execute(query, (month_str + '%',)).fetchall()
-        conn_tg.close()
-
-        # Преобразуем результат в удобный для фронтенда формат
-        # {'2024-07-15': {'post_count': 2}, ...}
-        scheduled_data = {row['post_day']: {'post_count': row['post_count']} for row in posts_by_day}
-
-        return jsonify(scheduled_data)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/main_summary', methods=['GET'])
-def get_telegram_main_summary():
-    """
-    Возвращает сводную информацию для главного дашборда Telegram-бота.
-    """
-    try:
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        
-        total_posts = conn_tg.execute('SELECT COUNT(id) FROM posts').fetchone()[0]
-        published_posts = conn_tg.execute('SELECT COUNT(id) FROM posts WHERE published = 1').fetchone()[0]
-        pending_posts = total_posts - published_posts
-        
-        # Получаем реальное количество каналов из новой таблицы
-        total_groups = conn_tg.execute('SELECT COUNT(id) FROM channels').fetchone()[0]
-
-        # Запрос последних 5 активностей (пока имитируем)
-        # В реальной системе здесь должен быть запрос к таблице логов или событий
-        recent_activities = [
-            {'type': 'success', 'text': 'Пост в "UX/UI Academy" успешно опубликован.', 'time': '2 минуты назад'},
-            {'type': 'info', 'text': 'Запланирован новый пост в "Design News".', 'time': '1 час назад'},
-            {'type': 'error', 'text': 'Ошибка публикации в "Test Channel": неверный chat_id.', 'time': '3 часа назад'},
-            {'type': 'success', 'text': 'Пост в "UX/UI Academy" успешно опубликован.', 'time': '5 часов назад'},
-            {'type': 'info', 'text': 'Бот успешно перезапущен.', 'time': '8 часов назад'}
-        ]
-
-        # Данные для графика (пока статичные)
-        publication_chart_data = {
-            'labels': ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-            'published': [5, 8, 12, 7, 10, 15, 9],
-            'scheduled': [3, 4, 2, 5, 6, 3, 7]
-        }
-        
-        conn_tg.close()
-
-        summary = {
-            'bot_status': {'online': True, 'message': 'Бот в сети'},
-            'stats': {
-                'total_posts': total_posts,
-                'total_groups': total_groups,
-                'published_posts': published_posts,
-                'pending_posts': pending_posts
-            },
-            'recent_activities': recent_activities,
-            'charts': {
-                'publications': publication_chart_data
-            }
-        }
-        return jsonify(summary)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/groups', methods=['GET'])
-def get_groups():
-    """Возвращает список всех каналов."""
-    try:
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        channels = conn_tg.execute('SELECT id, name, chat_id FROM channels ORDER BY name').fetchall()
-        conn_tg.close()
-        return jsonify([dict(row) for row in channels])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/groups', methods=['POST'])
-def add_group():
-    """Добавляет новый канал."""
-    data = request.get_json()
-    name = data.get('name')
-    chat_id = data.get('chat_id')
-
-    if not name or not chat_id:
-        return jsonify({'error': 'Name and chat_id are required'}), 400
-
-    try:
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        conn_tg.execute('INSERT INTO channels (name, chat_id) VALUES (?, ?)', (name, chat_id))
-        conn_tg.commit()
-        conn_tg.close()
-        return jsonify({'message': 'Channel added successfully'}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Channel with this chat_id already exists'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/groups/<int:group_id>', methods=['DELETE'])
-def delete_group(group_id):
-    """Удаляет канал по ID."""
-    try:
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        conn_tg.execute('DELETE FROM channels WHERE id = ?', (group_id,))
-        conn_tg.commit()
-        conn_tg.close()
-        return jsonify({'message': 'Channel deleted successfully'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/telegram/stats', methods=['GET'])
-def get_telegram_stats():
-    """
-    Возвращает детальную статистику для страницы аналитики.
-    """
-    try:
-        conn_tg = get_db_connection(TELEGRAM_DB_PATH)
-        
-        # 1. Общие метрики
-        total_posts = conn_tg.execute('SELECT COUNT(id) FROM posts').fetchone()[0]
-        published_posts = conn_tg.execute('SELECT COUNT(id) FROM posts WHERE published = 1').fetchone()[0]
-        success_rate = (published_posts / total_posts * 100) if total_posts > 0 else 0
-        
-        # 2. Посты за последние 30 дней для линейного графика
-        posts_last_30_days = conn_tg.execute("""
-            SELECT strftime('%Y-%m-%d', scheduled_date) as day, COUNT(id) as count
-            FROM posts
-            WHERE scheduled_date >= date('now', '-30 days') AND published = 1
-            GROUP BY day
-            ORDER BY day
-        """).fetchall()
-
-        # 3. Распределение постов по каналам для круговой диаграммы
-        posts_by_channel = conn_tg.execute("""
-            SELECT c.name, COUNT(p.id) as count
-            FROM posts p
-            JOIN channels c ON p.channel_id = c.chat_id
-            WHERE p.published = 1
-            GROUP BY c.name
-            ORDER BY count DESC
-        """).fetchall()
-        
-        # 4. Самый активный канал
-        most_active_channel = posts_by_channel[0]['name'] if posts_by_channel else 'N/A'
-        
-        # 5. Среднее число постов в день
-        total_days = conn_tg.execute("SELECT julianday(MAX(scheduled_date)) - julianday(MIN(scheduled_date)) FROM posts WHERE published = 1").fetchone()[0]
-        avg_posts_per_day = (published_posts / total_days) if total_days and total_days > 0 else 0
-
-        # 6. Детальная статистика по каналам для таблицы
-        channels_details = conn_tg.execute("""
-            SELECT 
-                c.id, c.name, c.chat_id, 
-                COUNT(p.id) as total_posts,
-                SUM(CASE WHEN p.published = 1 THEN 1 ELSE 0 END) as published_posts
-            FROM channels c
-            LEFT JOIN posts p ON c.chat_id = p.channel_id
-            GROUP BY c.id, c.name, c.chat_id
-            ORDER BY total_posts DESC
-        """).fetchall()
-
-        conn_tg.close()
-
-        stats = {
-            'overview': {
-                'total_published': published_posts,
-                'avg_per_day': round(avg_posts_per_day, 1),
-                'most_active_channel': most_active_channel,
-                'success_rate': round(success_rate, 2)
-            },
-            'charts': {
-                'publications_trend': {
-                    'labels': [row['day'] for row in posts_last_30_days],
-                    'data': [row['count'] for row in posts_last_30_days]
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальные данные от бота
+            dashboard_data = bot_integration.get_dashboard_data()
+        else:
+            # Возвращаем тестовые данные если интеграция недоступна
+            dashboard_data = {
+                'campaigns': {
+                    'total': 3,
+                    'active': 2,
+                    'inactive': 1
                 },
-                'posts_by_channel': {
-                    'labels': [row['name'] for row in posts_by_channel],
-                    'data': [row['count'] for row in posts_by_channel]
+                'posts': {
+                    'total': 156,
+                    'published': 144,
+                    'scheduled': 12,
+                    'failed': 0
+                },
+                'channels': {
+                    'total': 8,
+                    'active': 7,
+                    'inactive': 1
+                },
+                'engagement': {
+                    'average_engagement_rate': 4.2,
+                    'total_views': 15420,
+                    'total_likes': 648,
+                    'total_shares': 234
                 }
-            },
-            'channels_table': [dict(row) for row in channels_details]
-        }
+            }
         
-        return jsonify(stats)
-
+        return jsonify({
+            'success': True,
+            'data': dashboard_data
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-# --- CRUD для курсов ---
+@app.route('/api/universal-bot/campaigns', methods=['GET'])
+@login_required
+def get_universal_bot_campaigns():
+    """Получение списка кампаний универсального бота"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальные данные от бота
+            campaigns = bot_integration.get_campaigns_data()
+            # Конвертируем dataclass в dict
+            campaigns_data = [asdict(campaign) for campaign in campaigns]
+        else:
+            # Возвращаем тестовые данные
+            campaigns_data = [
+                {
+                    'id': 'uxui-campaign',
+                    'name': 'UX/UI Дизайн',
+                    'description': 'Кампания для продвижения курсов по UX/UI дизайну',
+                    'status': 'active',
+                    'channels': [
+                        {'id': 'channel1', 'name': 'UX/UI Designers', 'chat_id': '-1001234567890'},
+                        {'id': 'channel2', 'name': 'Design Community', 'chat_id': '-1001234567891'}
+                    ],
+                    'posts_count': 89,
+                    'scheduled_posts': 5,
+                    'created_at': '2024-01-15T10:00:00Z',
+                    'updated_at': '2024-01-20T15:30:00Z'
+                },
+                {
+                    'id': 'digitalizacija-campaign',
+                    'name': 'Цифровизация бизнеса',
+                    'description': 'Кампания для продвижения услуг цифровизации',
+                    'status': 'active',
+                    'channels': [
+                        {'id': 'channel3', 'name': 'Business Digital', 'chat_id': '-1001234567892'},
+                        {'id': 'channel4', 'name': 'Startup Hub', 'chat_id': '-1001234567893'}
+                    ],
+                    'posts_count': 67,
+                    'scheduled_posts': 7,
+                    'created_at': '2024-01-10T09:00:00Z',
+                    'updated_at': '2024-01-19T14:20:00Z'
+                }
+            ]
+        
+        return jsonify({
+            'success': True,
+            'data': campaigns_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/courses', methods=['POST'])
-def add_course():
-    """Добавляет новый курс."""
+@app.route('/api/universal-bot/campaigns', methods=['POST'])
+@login_required
+def create_universal_bot_campaign():
+    """Создание новой кампании"""
     try:
         data = request.get_json()
-        name = data.get('name')
-        description = data.get('description')
-        price = data.get('price')
-        start_date = data.get('start_date')
-
-        if not name or price is None:
-            return jsonify({'error': 'Название и цена являются обязательными полями'}), 400
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO courses (name, description, price, start_date) VALUES (?, ?, ?, ?)',
-            (name, description, price, start_date)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Курс успешно добавлен'}), 201
+        
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальную логику создания кампании
+            campaign = bot_integration.create_campaign(
+                name=data.get('name'),
+                description=data.get('description', ''),
+                channels=data.get('channels', [])
+            )
+            campaign_data = asdict(campaign)
+        else:
+            # Тестовая логика
+            campaign_id = f"campaign-{int(time.time())}"
+            campaign_data = {
+                'id': campaign_id,
+                'name': data.get('name'),
+                'description': data.get('description'),
+                'status': 'inactive',
+                'channels': [],
+                'posts_count': 0,
+                'scheduled_posts': 0,
+                'created_at': datetime.now().isoformat(),
+                'updated_at': datetime.now().isoformat()
+            }
+        
+        return jsonify({
+            'success': True,
+            'data': campaign_data
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/courses', methods=['GET'])
-def get_courses():
-    """Возвращает список всех курсов."""
+@app.route('/api/universal-bot/campaigns/<campaign_id>/start', methods=['POST'])
+@login_required
+def start_universal_bot_campaign(campaign_id):
+    """Запуск кампании"""
     try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        courses = conn.execute('SELECT * FROM courses ORDER BY id DESC').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in courses])
+        if BOT_INTEGRATION_AVAILABLE:
+            success = bot_integration.start_campaign(campaign_id)
+        else:
+            success = True  # Тестовая логика
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Кампания {campaign_id} запущена'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Не удалось запустить кампанию {campaign_id}'
+            }), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/courses/<int:course_id>', methods=['PUT'])
-def update_course(course_id):
-    """Обновляет существующий курс."""
+@app.route('/api/universal-bot/campaigns/<campaign_id>/pause', methods=['POST'])
+@login_required
+def pause_universal_bot_campaign(campaign_id):
+    """Приостановка кампании"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            success = bot_integration.pause_campaign(campaign_id)
+        else:
+            success = True  # Тестовая логика
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Кампания {campaign_id} приостановлена'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Не удалось приостановить кампанию {campaign_id}'
+            }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/universal-bot/campaigns/<campaign_id>', methods=['DELETE'])
+@login_required
+def delete_universal_bot_campaign(campaign_id):
+    """Удаление кампании"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            success = bot_integration.delete_campaign(campaign_id)
+        else:
+            success = True  # Тестовая логика
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Кампания {campaign_id} удалена'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Не удалось удалить кампанию {campaign_id}'
+            }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/universal-bot/channels', methods=['GET'])
+@login_required
+def get_universal_bot_channels():
+    """Получение списка каналов"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальные данные от бота
+            channels = bot_integration.get_channels_data()
+            channels_data = [asdict(channel) for channel in channels]
+        else:
+            # Возвращаем тестовые данные
+            channels_data = [
+                {'id': 'channel1', 'name': 'UX/UI Designers', 'chat_id': '-1001234567890', 'campaign': 'uxui-campaign', 'status': 'active'},
+                {'id': 'channel2', 'name': 'Design Community', 'chat_id': '-1001234567891', 'campaign': 'uxui-campaign', 'status': 'active'},
+                {'id': 'channel3', 'name': 'Business Digital', 'chat_id': '-1001234567892', 'campaign': 'digitalizacija-campaign', 'status': 'active'},
+                {'id': 'channel4', 'name': 'Startup Hub', 'chat_id': '-1001234567893', 'campaign': 'digitalizacija-campaign', 'status': 'active'}
+            ]
+        
+        return jsonify({
+            'success': True,
+            'data': channels_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/universal-bot/posts', methods=['GET'])
+@login_required
+def get_universal_bot_posts():
+    """Получение списка постов"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальные данные от бота
+            posts = bot_integration.get_posts_data()
+            posts_data = [asdict(post) for post in posts]
+        else:
+            # Возвращаем тестовые данные
+            posts_data = [
+                {
+                    'id': 'post1',
+                    'content': '🎨 Хотите стать UX/UI дизайнером? Наш курс поможет вам освоить все необходимые навыки! #UX #UI #дизайн',
+                    'campaign': 'uxui-campaign',
+                    'channels': ['channel1', 'channel2'],
+                    'status': 'published',
+                    'published_time': '2024-01-20T10:00:00Z',
+                    'created_at': '2024-01-19T15:00:00Z',
+                    'updated_at': '2024-01-20T10:00:00Z'
+                },
+                {
+                    'id': 'post2',
+                    'content': '🚀 Цифровизация бизнеса - ключ к успеху в современном мире. Узнайте, как автоматизировать ваши процессы! #цифровизация #бизнес',
+                    'campaign': 'digitalizacija-campaign',
+                    'channels': ['channel3', 'channel4'],
+                    'status': 'scheduled',
+                    'scheduled_time': '2024-01-21T14:00:00Z',
+                    'created_at': '2024-01-20T12:00:00Z',
+                    'updated_at': '2024-01-20T12:00:00Z'
+                }
+            ]
+        
+        return jsonify({
+            'success': True,
+            'data': posts_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/universal-bot/posts', methods=['POST'])
+@login_required
+def create_universal_bot_post():
+    """Создание нового поста"""
     try:
         data = request.get_json()
-        name = data.get('name')
-        description = data.get('description')
-        price = data.get('price')
-        start_date = data.get('start_date')
-        status = data.get('status')
-
-        if not name or price is None or status is None:
-            return jsonify({'error': 'Название, цена и статус являются обязательными полями'}), 400
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'UPDATE courses SET name = ?, description = ?, price = ?, start_date = ?, status = ? WHERE id = ?',
-            (name, description, price, start_date, status, course_id)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Курс успешно обновлен'})
+        
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальную логику создания поста
+            post = bot_integration.create_post(
+                content=data.get('content'),
+                campaign=data.get('campaign'),
+                channels=data.get('channels', []),
+                scheduled_time=data.get('scheduled_time')
+            )
+            post_data = asdict(post)
+        else:
+            # Тестовая логика
+            post_id = f"post-{int(time.time())}"
+            post_data = {
+                'id': post_id,
+                'content': data.get('content'),
+                'campaign': data.get('campaign'),
+                'channels': data.get('channels', []),
+                'status': 'draft',
+                'created_at': datetime.now().isoformat(),
+                'updated_at': datetime.now().isoformat()
+            }
+        
+        return jsonify({
+            'success': True,
+            'data': post_data
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/courses/<int:course_id>', methods=['DELETE'])
-def delete_course(course_id):
-    """Удаляет курс."""
+@app.route('/api/universal-bot/posts/<post_id>', methods=['DELETE'])
+@login_required
+def delete_universal_bot_post(post_id):
+    """Удаление поста"""
     try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute('DELETE FROM courses WHERE id = ?', (course_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Курс успешно удален'})
+        if BOT_INTEGRATION_AVAILABLE:
+            success = bot_integration.delete_post(post_id)
+        else:
+            success = True  # Тестовая логика
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Пост {post_id} удален'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Не удалось удалить пост {post_id}'
+            }), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-# --- CRUD для Транзакций ---
-
-@app.route('/api/transactions', methods=['POST'])
-def add_transaction():
-    """Добавляет новую транзакцию."""
+@app.route('/api/universal-bot/generate-content', methods=['POST'])
+@login_required
+def generate_universal_bot_content():
+    """Генерация контента"""
     try:
         data = request.get_json()
-        # Простая валидация
-        if not all(k in data for k in ['type', 'amount', 'description', 'date', 'category']):
-            return jsonify({'error': 'Не все поля были предоставлены'}), 400
         
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO transactions (type, amount, description, date, category, course_id) VALUES (?, ?, ?, ?, ?, ?)',
-            (data['type'], data['amount'], data['description'], data['date'], data['category'], data.get('course_id'))
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Транзакция успешно добавлена'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/transactions', methods=['GET'])
-def get_transactions():
-    """Возвращает список транзакций с фильтрацией."""
-    try:
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальную логику генерации контента
+            generated_content = bot_integration.generate_content(
+                topic=data.get('topic', 'UX/UI дизайн'),
+                campaign=data.get('campaign', 'default'),
+                tone=data.get('tone', 'professional'),
+                length=data.get('length', 'medium'),
+                target_audience=data.get('target_audience', ''),
+                platform=data.get('platform', 'telegram'),
+                include_hashtags=data.get('include_hashtags', True),
+                include_call_to_action=data.get('include_call_to_action', True)
+            )
+        else:
+            # Тестовая логика генерации контента
+            topic = data.get('topic', 'UX/UI дизайн')
+            tone = data.get('tone', 'professional')
+            platform = data.get('platform', 'telegram')
+            
+            content_templates = {
+                'professional': f"🎯 {topic} - важная тема для современных специалистов. Изучайте, практикуйтесь и развивайтесь!",
+                'casual': f"Привет! 👋 Сегодня поговорим о {topic}. Это действительно интересная тема!",
+                'friendly': f"Друзья! 😊 Хотите узнать больше о {topic}? Мы подготовили для вас полезную информацию!",
+                'formal': f"Уважаемые коллеги, представляем вашему вниманию материал по теме: {topic}."
+            }
+            
+            generated_content = content_templates.get(tone, content_templates['professional'])
+            
+            hashtags = ['#дизайн', '#UX', '#UI', '#образование'] if 'дизайн' in topic.lower() else ['#бизнес', '#цифровизация', '#автоматизация']
+            
+            call_to_action = "Подписывайтесь на наш канал для получения полезных материалов!" if platform == 'telegram' else "Следите за нашими обновлениями!"
+            
+            generated_content = {
+                'content': generated_content,
+                'hashtags': hashtags,
+                'call_to_action': call_to_action,
+                'campaign': data.get('campaign'),
+                'platform': platform,
+                'created_at': datetime.now().isoformat(),
+                'status': 'draft'
+            }
         
-        query = 'SELECT t.*, c.name as course_name FROM transactions t LEFT JOIN courses c ON t.course_id = c.id'
-        params = []
+        return jsonify({
+            'success': True,
+            'data': generated_content
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/universal-bot/system-status', methods=['GET'])
+@login_required
+def get_universal_bot_system_status():
+    """Получение статуса системы"""
+    try:
+        if BOT_INTEGRATION_AVAILABLE:
+            # Используем реальные данные от бота
+            system_status = bot_integration.get_system_status()
+            status_data = asdict(system_status)
+        else:
+            # Возвращаем тестовые данные
+            status_data = {
+                'schedulers': {
+                    'default': {
+                        'status': 'running',
+                        'last_run': datetime.now().isoformat(),
+                        'next_run': (datetime.now() + timedelta(hours=1)).isoformat(),
+                        'error_message': None
+                    },
+                    'digitalizacija': {
+                        'status': 'running',
+                        'last_run': datetime.now().isoformat(),
+                        'next_run': (datetime.now() + timedelta(hours=1)).isoformat(),
+                        'error_message': None
+                    }
+                },
+                'content_generator': {
+                    'status': 'available',
+                    'last_generation': datetime.now().isoformat(),
+                    'error_message': None
+                },
+                'database': {
+                    'status': 'connected',
+                    'last_backup': datetime.now().isoformat()
+                },
+                'telegram_api': {
+                    'status': 'connected',
+                    'last_check': datetime.now().isoformat()
+                }
+            }
         
-        if start_date and end_date:
-            query += ' WHERE t.date BETWEEN ? AND ?'
-            params.extend([start_date, end_date])
-        
-        query += ' ORDER BY t.date DESC'
-        
-        transactions = conn.execute(query, params).fetchall()
-        conn.close()
-        
-        return jsonify([dict(row) for row in transactions])
+        return jsonify({
+            'success': True,
+            'data': status_data
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-# --- CRUD для Команды ---
+# ===== МАРШРУТЫ ДЛЯ УНИВЕРСАЛЬНОГО БОТА =====
 
-@app.route('/api/team', methods=['POST'])
-def add_team_member():
-    """Добавляет нового члена команды."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('role'):
-            return jsonify({'error': 'Имя и роль обязательны'}), 400
-        
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO team_members (name, role, email) VALUES (?, ?, ?)',
-            (data['name'], data['role'], data.get('email'))
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Сотрудник добавлен'}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Сотрудник с таким email уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route('/universal-bot')
+@login_required
+def universal_bot_dashboard():
+    """Дашборд универсального бота"""
+    return render_template('universal_bot_dashboard.html')
 
-@app.route('/api/team', methods=['GET'])
-def get_team_members():
-    """Возвращает список всех членов команды."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        members = conn.execute('SELECT * FROM team_members ORDER BY name').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in members])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route('/universal-bot/campaigns')
+@login_required
+def universal_bot_campaigns():
+    """Управление кампаниями"""
+    return render_template('universal_bot_campaigns.html')
 
-@app.route('/api/team/<int:member_id>', methods=['PUT'])
-def update_team_member(member_id):
-    """Обновляет данные члена команды."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('role') or not data.get('status'):
-            return jsonify({'error': 'Имя, роль и статус обязательны'}), 400
+@app.route('/universal-bot/posts')
+@login_required
+def universal_bot_posts():
+    """Управление постами"""
+    return render_template('universal_bot_posts.html')
 
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'UPDATE team_members SET name = ?, role = ?, email = ?, status = ? WHERE id = ?',
-            (data['name'], data['role'], data.get('email'), data['status'], member_id)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Данные сотрудника обновлены'})
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Сотрудник с таким email уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route('/universal-bot/generator')
+@login_required
+def universal_bot_generator():
+    """Генератор контента"""
+    return render_template('universal_bot_generator.html')
 
-@app.route('/api/team/<int:member_id>', methods=['DELETE'])
-def delete_team_member(member_id):
-    """Удаляет члена команды."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute('DELETE FROM team_members WHERE id = ?', (member_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Сотрудник удален'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# --- CRUD для Рекламных кампаний ---
-
-@app.route('/api/campaigns', methods=['POST'])
-def add_campaign():
-    """Добавляет новую рекламную кампанию."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('budget'):
-            return jsonify({'error': 'Название и бюджет обязательны'}), 400
-        
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO campaigns (name, source, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
-            (data['name'], data.get('source'), data['budget'], data.get('start_date'), data.get('end_date'))
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Кампания добавлена'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/campaigns', methods=['GET'])
-def get_campaigns():
-    """Возвращает список всех кампаний с агрегированной статистикой."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        # Этот запрос объединяет кампании с их суммарной статистикой
-        query = """
-            SELECT 
-                c.*,
-                SUM(cs.cost) as total_cost,
-                SUM(cs.clicks) as total_clicks,
-                SUM(cs.conversions) as total_conversions
-            FROM campaigns c
-            LEFT JOIN campaign_stats cs ON c.id = cs.campaign_id
-            GROUP BY c.id
-            ORDER BY c.start_date DESC
-        """
-        campaigns = conn.execute(query).fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in campaigns])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/campaigns/<int:campaign_id>', methods=['PUT'])
-def update_campaign(campaign_id):
-    """Обновляет данные рекламной кампании."""
-    try:
-        data = request.get_json()
-        if not all(k in data for k in ['name', 'budget', 'status']):
-            return jsonify({'error': 'Название, бюджет и статус обязательны'}), 400
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'UPDATE campaigns SET name=?, source=?, budget=?, start_date=?, end_date=?, status=? WHERE id=?',
-            (data['name'], data.get('source'), data['budget'], data.get('start_date'), data.get('end_date'), data['status'], campaign_id)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Данные кампании обновлены'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/campaigns/<int:campaign_id>', methods=['DELETE'])
-def delete_campaign(campaign_id):
-    """Удаляет кампанию и связанную с ней статистику."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        # Сначала удаляем статистику, чтобы не нарушить foreign key constraint
-        conn.execute('DELETE FROM campaign_stats WHERE campaign_id = ?', (campaign_id,))
-        # Затем удаляем саму кампанию
-        conn.execute('DELETE FROM campaigns WHERE id = ?', (campaign_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Кампания и ее статистика удалены'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# --- CRUD для Студентов ---
-
-@app.route('/api/students', methods=['POST'])
-def add_student():
-    """Добавляет нового студента."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('email') or not data.get('registration_date'):
-            return jsonify({'error': 'Имя, email и дата регистрации обязательны'}), 400
-        
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO students (name, email, registration_date) VALUES (?, ?, ?)',
-            (data['name'], data['email'], data['registration_date'])
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Студент добавлен'}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Студент с таким email уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/students', methods=['GET'])
-def get_students():
-    """Возвращает список всех студентов."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        students = conn.execute('SELECT * FROM students ORDER BY registration_date DESC').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in students])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/students/<int:student_id>', methods=['PUT'])
-def update_student(student_id):
-    """Обновляет данные студента."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('email'):
-            return jsonify({'error': 'Имя и email обязательны'}), 400
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'UPDATE students SET name=?, email=? WHERE id=?',
-            (data['name'], data['email'], student_id)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Данные студента обновлены'})
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Студент с таким email уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/students/<int:student_id>', methods=['DELETE'])
-def delete_student(student_id):
-    """Удаляет студента и все его записи на курсы."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        # Сначала удаляем записи на курсы
-        conn.execute('DELETE FROM enrollments WHERE student_id = ?', (student_id,))
-        # Затем самого студента
-        conn.execute('DELETE FROM students WHERE id = ?', (student_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Студент и все его данные удалены'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# --- CRUD для Партнеров ---
-
-@app.route('/api/partners', methods=['POST'])
-def add_partner():
-    """Добавляет нового партнера."""
-    try:
-        data = request.get_json()
-        if not data.get('name') or not data.get('promo_code'):
-            return jsonify({'error': 'Имя и промокод обязательны'}), 400
-        
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'INSERT INTO partners (name, email, promo_code) VALUES (?, ?, ?)',
-            (data['name'], data.get('email'), data['promo_code'])
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Партнер добавлен'}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Партнер с таким email или промокодом уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/partners', methods=['GET'])
-def get_partners():
-    """Возвращает список партнеров со статистикой по рефералам."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        query = """
-            SELECT 
-                p.*,
-                COUNT(r.id) as referral_count
-            FROM partners p
-            LEFT JOIN referrals r ON p.id = r.partner_id
-            GROUP BY p.id
-            ORDER BY p.name
-        """
-        partners = conn.execute(query).fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in partners])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/partners/<int:partner_id>', methods=['PUT'])
-def update_partner(partner_id):
-    """Обновляет данные партнера."""
-    try:
-        data = request.get_json()
-        if not all(k in data for k in ['name', 'promo_code', 'status']):
-            return jsonify({'error': 'Имя, промокод и статус обязательны'}), 400
-
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute(
-            'UPDATE partners SET name=?, email=?, promo_code=?, status=? WHERE id=?',
-            (data['name'], data.get('email'), data['promo_code'], data['status'], partner_id)
-        )
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Данные партнера обновлены'})
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Партнер с таким email или промокодом уже существует'}), 409
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/partners/<int:partner_id>', methods=['DELETE'])
-def delete_partner(partner_id):
-    """Удаляет партнера и его рефералов."""
-    try:
-        conn = get_db_connection(TELEGRAM_DB_PATH)
-        conn.execute('DELETE FROM referrals WHERE partner_id = ?', (partner_id,))
-        conn.execute('DELETE FROM partners WHERE id = ?', (partner_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Партнер и его рефералы удалены'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# --- Рендеринг страниц ---
 @app.route('/manage-courses')
 @login_required
-def manage_courses_page():
-    """Открывает страницу управления курсами."""
+def manage_courses():
     return render_template('manage_courses.html')
-
-@app.route('/financial-report')
-@login_required
-def financial_report_page():
-    """Открывает страницу финансового отчета."""
-    return render_template('financial_report.html')
 
 @app.route('/manage-team')
 @login_required
-def manage_team_page():
-    """Открывает страницу управления командой."""
+def manage_team():
     return render_template('manage_team.html')
 
 @app.route('/manage-campaigns')
 @login_required
-def manage_campaigns_page():
-    """Открывает страницу управления рекламными кампаниями."""
+def manage_campaigns():
     return render_template('manage_campaigns.html')
 
 @app.route('/student-analytics')
 @login_required
-def student_analytics_page():
-    """Открывает страницу аналитики студентов."""
+def student_analytics():
     return render_template('student_analytics.html')
+
+@app.route('/financial-report')
+@login_required
+def financial_report():
+    return render_template('financial_report.html')
 
 @app.route('/partner-program')
 @login_required
-def partner_program_page():
+def partner_program():
     return render_template('partner_program.html')
 
 @app.route('/telegram-bot')
 @login_required
-def telegram_bot_page():
-    """Открывает страницу Telegram Bot дашборда."""
-    return render_template('telegram_bot_main_dashboard.html')
+def telegram_bot():
+    return render_template('telegram_bot_dashboard.html')
 
 @app.route('/content-generator')
 @login_required
-def content_generator_page():
-    """Открывает страницу генератора контента."""
+def content_generator():
     return render_template('content_generator_dashboard.html')
+
+# ... existing code ...
 
 if __name__ == '__main__':
     init_db() # Вызываем инициализацию БД при старте

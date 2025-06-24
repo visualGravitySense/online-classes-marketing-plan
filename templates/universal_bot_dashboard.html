@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Универсальный Telegram Bot - Панель управления</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+        }
+
+        /* Боковое меню */
+        .sidebar {
+            width: 280px;
+            background: rgba(45, 55, 72, 0.95);
+            backdrop-filter: blur(15px);
+            color: #fff;
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 0 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-category {
+            padding: 15px 20px 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #a0aec0;
+            font-weight: 600;
+        }
+
+        .menu li {
+            padding: 15px 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu li:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .menu li.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+
+        .menu-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Заголовок */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe);
+            animation: rainbow 4s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5); }
+            to { box-shadow: 0 0 30px rgba(72, 187, 120, 0.8); }
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* Статистика */
+        .stats-overview {
+            background: transparent;
+            border-radius: 20px;
+            padding: 0;
+            box-shadow: none;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: 5px solid;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-item.campaigns { border-top-color: #667eea; }
+        .stat-item.posts { border-top-color: #764ba2; }
+        .stat-item.channels { border-top-color: #f093fb; }
+        .stat-item.engagement { border-top-color: #f5576c; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-subtitle {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Кампании */
+        .campaigns-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .campaign-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .campaign-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .campaign-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .campaign-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(72, 187, 120, 0.1);
+            color: #38a169;
+        }
+
+        .status-inactive {
+            background: rgba(245, 101, 101, 0.1);
+            color: #e53e3e;
+        }
+
+        .status-paused {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d69e2e;
+        }
+
+        .campaign-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .campaign-stat {
+            text-align: center;
+        }
+
+        .campaign-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .campaign-stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .campaign-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        /* Системный статус */
+        .system-status {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .status-icon.running {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .status-icon.stopped {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+
+        .status-icon.error {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+        }
+
+        .status-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .status-info p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Быстрые действия */
+        .quick-actions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .action-card {
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto 15px;
+        }
+
+        .action-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .action-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .campaigns-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Боковое меню -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">🤖</div>
+            <div class="sidebar-title">Universal Bot</div>
+        </div>
+        
+        <ul class="menu">
+            <div class="menu-category">Основное</div>
+            <li class="active" onclick="showSection('dashboard')">
+                <span class="menu-icon">📊</span>
+                Панель управления
+            </li>
+            <li onclick="showSection('campaigns')">
+                <span class="menu-icon">🎯</span>
+                Кампании
+            </li>
+            <li onclick="showSection('posts')">
+                <span class="menu-icon">📝</span>
+                Посты
+            </li>
+            
+            <div class="menu-category">Контент</div>
+            <li onclick="showSection('generator')">
+                <span class="menu-icon">✨</span>
+                Генератор контента
+            </li>
+            <li onclick="showSection('schedule')">
+                <span class="menu-icon">📅</span>
+                Расписание
+            </li>
+            
+            <div class="menu-category">Аналитика</div>
+            <li onclick="showSection('analytics')">
+                <span class="menu-icon">📈</span>
+                Статистика
+            </li>
+            <li onclick="showSection('reports')">
+                <span class="menu-icon">📋</span>
+                Отчеты
+            </li>
+            
+            <div class="menu-category">Система</div>
+            <li onclick="showSection('settings')">
+                <span class="menu-icon">⚙️</span>
+                Настройки
+            </li>
+            <li onclick="showSection('logs')">
+                <span class="menu-icon">📋</span>
+                Логи
+            </li>
+        </ul>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <div class="dashboard">
+            <!-- Заголовок -->
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-text">
+                        <h1>Универсальный Telegram Bot</h1>
+                        <p>Управление множественными кампаниями и автоматизация публикаций</p>
+                    </div>
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        Система активна
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="stats-overview">
+                <div class="stats-grid">
+                    <div class="stat-item campaigns">
+                        <div class="stat-number" id="totalCampaigns">3</div>
+                        <div class="stat-label">Кампании</div>
+                        <div class="stat-subtitle">2 активных</div>
+                    </div>
+                    <div class="stat-item posts">
+                        <div class="stat-number" id="totalPosts">156</div>
+                        <div class="stat-label">Посты</div>
+                        <div class="stat-subtitle">12 запланировано</div>
+                    </div>
+                    <div class="stat-item channels">
+                        <div class="stat-number" id="totalChannels">8</div>
+                        <div class="stat-label">Каналы</div>
+                        <div class="stat-subtitle">7 активных</div>
+                    </div>
+                    <div class="stat-item engagement">
+                        <div class="stat-number" id="avgEngagement">4.2%</div>
+                        <div class="stat-label">Вовлеченность</div>
+                        <div class="stat-subtitle">+0.8% за неделю</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кампании -->
+            <div class="campaigns-section">
+                <div class="section-header">
+                    <h2 class="section-title">Активные кампании</h2>
+                    <button class="btn btn-primary" onclick="createCampaign()">
+                        <span>➕</span>
+                        Новая кампания
+                    </button>
+                </div>
+                
+                <div class="campaigns-grid" id="campaignsGrid">
+                    <!-- Кампании будут загружены динамически -->
+                </div>
+            </div>
+
+            <!-- Системный статус -->
+            <div class="system-status">
+                <div class="section-header">
+                    <h2 class="section-title">Статус системы</h2>
+                </div>
+                
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-icon running">✅</div>
+                        <div class="status-info">
+                            <h4>Планировщики</h4>
+                            <p>Все кампании активны</p>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-icon running">✅</div>
+                        <div class="status-info">
+                            <h4>Генератор контента</h4>
+                            <p>Доступен</p>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-icon running">✅</div>
+                        <div class="status-info">
+                            <h4>База данных</h4>
+                            <p>Подключена</p>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-icon running">✅</div>
+                        <div class="status-info">
+                            <h4>Telegram API</h4>
+                            <p>Работает</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Быстрые действия -->
+            <div class="quick-actions">
+                <div class="section-header">
+                    <h2 class="section-title">Быстрые действия</h2>
+                </div>
+                
+                <div class="actions-grid">
+                    <div class="action-card" onclick="generateContent()">
+                        <div class="action-icon">✨</div>
+                        <div class="action-title">Создать пост</div>
+                        <div class="action-description">Генерировать новый контент</div>
+                    </div>
+                    <div class="action-card" onclick="schedulePost()">
+                        <div class="action-icon">📅</div>
+                        <div class="action-title">Запланировать</div>
+                        <div class="action-description">Настроить расписание</div>
+                    </div>
+                    <div class="action-card" onclick="viewAnalytics()">
+                        <div class="action-icon">📈</div>
+                        <div class="action-title">Аналитика</div>
+                        <div class="action-description">Посмотреть статистику</div>
+                    </div>
+                    <div class="action-card" onclick="manageChannels()">
+                        <div class="action-icon">📢</div>
+                        <div class="action-title">Каналы</div>
+                        <div class="action-description">Управление каналами</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            loadCampaigns();
+        });
+
+        // Загрузка данных дашборда
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/universal-bot/dashboard');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateDashboardStats(data.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+            }
+        }
+
+        // Обновление статистики
+        function updateDashboardStats(data) {
+            document.getElementById('totalCampaigns').textContent = data.campaigns.total;
+            document.getElementById('totalPosts').textContent = data.posts.total;
+            document.getElementById('totalChannels').textContent = data.channels.total;
+            document.getElementById('avgEngagement').textContent = data.engagement.average_engagement_rate + '%';
+        }
+
+        // Загрузка кампаний
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/universal-bot/campaigns');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderCampaigns(data.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки кампаний:', error);
+            }
+        }
+
+        // Отрисовка кампаний
+        function renderCampaigns(campaigns) {
+            const grid = document.getElementById('campaignsGrid');
+            grid.innerHTML = '';
+
+            campaigns.forEach(campaign => {
+                const card = createCampaignCard(campaign);
+                grid.appendChild(card);
+            });
+        }
+
+        // Создание карточки кампании
+        function createCampaignCard(campaign) {
+            const card = document.createElement('div');
+            card.className = 'campaign-card';
+            
+            const statusClass = campaign.status === 'active' ? 'status-active' : 
+                              campaign.status === 'paused' ? 'status-paused' : 'status-inactive';
+            
+            card.innerHTML = `
+                <div class="campaign-header">
+                    <div class="campaign-name">${campaign.name}</div>
+                    <div class="campaign-status ${statusClass}">${getStatusText(campaign.status)}</div>
+                </div>
+                <div class="campaign-stats">
+                    <div class="campaign-stat">
+                        <div class="campaign-stat-number">${campaign.posts_count}</div>
+                        <div class="campaign-stat-label">Постов</div>
+                    </div>
+                    <div class="campaign-stat">
+                        <div class="campaign-stat-number">${campaign.channels.length}</div>
+                        <div class="campaign-stat-label">Каналов</div>
+                    </div>
+                </div>
+                <div class="campaign-actions">
+                    ${campaign.status === 'active' ? 
+                        `<button class="btn btn-sm btn-warning" onclick="pauseCampaign('${campaign.id}')">Пауза</button>` :
+                        `<button class="btn btn-sm btn-success" onclick="startCampaign('${campaign.id}')">Запустить</button>`
+                    }
+                    <button class="btn btn-sm btn-primary" onclick="editCampaign('${campaign.id}')">Редактировать</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Получение текста статуса
+        function getStatusText(status) {
+            const statusMap = {
+                'active': 'Активна',
+                'inactive': 'Неактивна',
+                'paused': 'На паузе'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Функции управления кампаниями
+        async function startCampaign(campaignId) {
+            try {
+                const response = await fetch(`/api/universal-bot/campaigns/${campaignId}/start`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCampaigns();
+                    showNotification('Кампания запущена', 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка запуска кампании:', error);
+                showNotification('Ошибка запуска кампании', 'error');
+            }
+        }
+
+        async function pauseCampaign(campaignId) {
+            try {
+                const response = await fetch(`/api/universal-bot/campaigns/${campaignId}/pause`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCampaigns();
+                    showNotification('Кампания приостановлена', 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка приостановки кампании:', error);
+                showNotification('Ошибка приостановки кампании', 'error');
+            }
+        }
+
+        // Функции быстрых действий
+        function createCampaign() {
+            window.location.href = '/universal-bot/campaigns/create';
+        }
+
+        function generateContent() {
+            window.location.href = '/universal-bot/generator';
+        }
+
+        function schedulePost() {
+            window.location.href = '/universal-bot/schedule';
+        }
+
+        function viewAnalytics() {
+            window.location.href = '/universal-bot/analytics';
+        }
+
+        function manageChannels() {
+            window.location.href = '/universal-bot/channels';
+        }
+
+        // Навигация по разделам
+        function showSection(section) {
+            // Здесь будет логика переключения между разделами
+            console.log('Переход к разделу:', section);
+        }
+
+        // Уведомления
+        function showNotification(message, type = 'info') {
+            // Простая реализация уведомлений
+            alert(message);
+        }
+
+        // Обновление данных каждые 30 секунд
+        setInterval(() => {
+            loadDashboardData();
+            loadCampaigns();
+        }, 30000);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление кампаниями - Universal Bot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* Заголовок */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            animation: rainbow 4s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Фильтры и поиск */
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-content {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .filter-input, .filter-select {
+            padding: 10px 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Список кампаний */
+        .campaigns-list {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .campaign-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto auto;
+            gap: 20px;
+            align-items: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .campaign-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .campaign-info h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .campaign-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .campaign-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .campaign-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status-active {
+            background: rgba(72, 187, 120, 0.1);
+            color: #38a169;
+        }
+
+        .status-inactive {
+            background: rgba(245, 101, 101, 0.1);
+            color: #e53e3e;
+        }
+
+        .status-paused {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d69e2e;
+        }
+
+        .campaign-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        /* Модальное окно создания кампании */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .campaign-item {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .campaign-stats {
+                justify-content: center;
+            }
+
+            .campaign-actions {
+                justify-content: center;
+            }
+
+            .filters-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Управление кампаниями</h1>
+                    <p>Создавайте и управляйте кампаниями для автоматической публикации</p>
+                </div>
+                <button class="btn btn-primary" onclick="openCreateModal()">
+                    <span>➕</span>
+                    Новая кампания
+                </button>
+            </div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filters">
+            <div class="filters-content">
+                <div class="filter-group">
+                    <label class="filter-label">Поиск</label>
+                    <input type="text" class="filter-input" placeholder="Название кампании..." id="searchInput">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Статус</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Все статусы</option>
+                        <option value="active">Активные</option>
+                        <option value="inactive">Неактивные</option>
+                        <option value="paused">На паузе</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Сортировка</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="name">По названию</option>
+                        <option value="created">По дате создания</option>
+                        <option value="posts">По количеству постов</option>
+                        <option value="status">По статусу</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список кампаний -->
+        <div class="campaigns-list">
+            <div id="campaignsList">
+                <!-- Кампании будут загружены динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания кампании -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Создать новую кампанию</h2>
+                <span class="close" onclick="closeCreateModal()">&times;</span>
+            </div>
+            
+            <form id="createCampaignForm">
+                <div class="form-group">
+                    <label class="form-label">Название кампании *</label>
+                    <input type="text" class="form-input" id="campaignName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea class="form-textarea" id="campaignDescription" placeholder="Описание кампании..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Тип кампании</label>
+                    <select class="form-select" id="campaignType">
+                        <option value="uxui">UX/UI Дизайн</option>
+                        <option value="digitalizacija">Цифровизация бизнеса</option>
+                        <option value="custom">Пользовательская</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Каналы</label>
+                    <div id="channelsList">
+                        <!-- Список каналов будет загружен динамически -->
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать кампанию</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCampaigns();
+            loadChannels();
+            setupFilters();
+        });
+
+        // Загрузка кампаний
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/universal-bot/campaigns');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderCampaigns(data.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки кампаний:', error);
+            }
+        }
+
+        // Отрисовка кампаний
+        function renderCampaigns(campaigns) {
+            const list = document.getElementById('campaignsList');
+            list.innerHTML = '';
+
+            if (campaigns.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #666;">
+                        <h3>Кампании не найдены</h3>
+                        <p>Создайте первую кампанию для начала работы</p>
+                    </div>
+                `;
+                return;
+            }
+
+            campaigns.forEach(campaign => {
+                const item = createCampaignItem(campaign);
+                list.appendChild(item);
+            });
+        }
+
+        // Создание элемента кампании
+        function createCampaignItem(campaign) {
+            const item = document.createElement('div');
+            item.className = 'campaign-item';
+            
+            const statusClass = campaign.status === 'active' ? 'status-active' : 
+                              campaign.status === 'paused' ? 'status-paused' : 'status-inactive';
+            
+            item.innerHTML = `
+                <div class="campaign-info">
+                    <h3>${campaign.name}</h3>
+                    <p>${campaign.description || 'Описание отсутствует'}</p>
+                </div>
+                <div class="campaign-stats">
+                    <div class="stat">
+                        <div class="stat-number">${campaign.posts_count}</div>
+                        <div class="stat-label">Постов</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${campaign.channels.length}</div>
+                        <div class="stat-label">Каналов</div>
+                    </div>
+                </div>
+                <div class="campaign-status ${statusClass}">
+                    ${getStatusText(campaign.status)}
+                </div>
+                <div class="campaign-actions">
+                    ${campaign.status === 'active' ? 
+                        `<button class="btn btn-sm btn-warning" onclick="pauseCampaign('${campaign.id}')">Пауза</button>` :
+                        `<button class="btn btn-sm btn-success" onclick="startCampaign('${campaign.id}')">Запустить</button>`
+                    }
+                    <button class="btn btn-sm btn-info" onclick="editCampaign('${campaign.id}')">Редактировать</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCampaign('${campaign.id}')">Удалить</button>
+                </div>
+            `;
+            
+            return item;
+        }
+
+        // Получение текста статуса
+        function getStatusText(status) {
+            const statusMap = {
+                'active': 'Активна',
+                'inactive': 'Неактивна',
+                'paused': 'На паузе'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Загрузка каналов
+        async function loadChannels() {
+            try {
+                const response = await fetch('/api/universal-bot/channels');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderChannelsList(data.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки каналов:', error);
+            }
+        }
+
+        // Отрисовка списка каналов
+        function renderChannelsList(channels) {
+            const list = document.getElementById('channelsList');
+            list.innerHTML = '';
+
+            channels.forEach(channel => {
+                const checkbox = document.createElement('div');
+                checkbox.style.marginBottom = '10px';
+                checkbox.innerHTML = `
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" value="${channel.id}" style="width: 18px; height: 18px;">
+                        <span>${channel.name}</span>
+                    </label>
+                `;
+                list.appendChild(checkbox);
+            });
+        }
+
+        // Настройка фильтров
+        function setupFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const sortFilter = document.getElementById('sortFilter');
+
+            searchInput.addEventListener('input', filterCampaigns);
+            statusFilter.addEventListener('change', filterCampaigns);
+            sortFilter.addEventListener('change', filterCampaigns);
+        }
+
+        // Фильтрация кампаний
+        function filterCampaigns() {
+            // Здесь будет логика фильтрации
+            loadCampaigns();
+        }
+
+        // Управление кампаниями
+        async function startCampaign(campaignId) {
+            try {
+                const response = await fetch(`/api/universal-bot/campaigns/${campaignId}/start`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCampaigns();
+                    showNotification('Кампания запущена', 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка запуска кампании:', error);
+                showNotification('Ошибка запуска кампании', 'error');
+            }
+        }
+
+        async function pauseCampaign(campaignId) {
+            try {
+                const response = await fetch(`/api/universal-bot/campaigns/${campaignId}/pause`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCampaigns();
+                    showNotification('Кампания приостановлена', 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка приостановки кампании:', error);
+                showNotification('Ошибка приостановки кампании', 'error');
+            }
+        }
+
+        async function deleteCampaign(campaignId) {
+            if (!confirm('Вы уверены, что хотите удалить эту кампанию?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/universal-bot/campaigns/${campaignId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCampaigns();
+                    showNotification('Кампания удалена', 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка удаления кампании:', error);
+                showNotification('Ошибка удаления кампании', 'error');
+            }
+        }
+
+        function editCampaign(campaignId) {
+            window.location.href = `/universal-bot/campaigns/${campaignId}/edit`;
+        }
+
+        // Модальное окно
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'block';
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('createCampaignForm').reset();
+        }
+
+        // Создание кампании
+        document.getElementById('createCampaignForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('campaignName').value,
+                description: document.getElementById('campaignDescription').value,
+                type: document.getElementById('campaignType').value,
+                channels: Array.from(document.querySelectorAll('#channelsList input:checked')).map(cb => cb.value)
+            };
+
+            try {
+                const response = await fetch('/api/universal-bot/campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    closeCreateModal();
+                    loadCampaigns();
+                    showNotification('Кампания создана', 'success');
+                } else {
+                    showNotification(data.error || 'Ошибка создания кампании', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка создания кампании:', error);
+                showNotification('Ошибка создания кампании', 'error');
+            }
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('createModal');
+            if (event.target === modal) {
+                closeCreateModal();
+            }
+        }
+
+        // Уведомления
+        function showNotification(message, type = 'info') {
+            // Простая реализация уведомлений
+            alert(message);
+        }
+
+        // Обновление данных каждые 30 секунд
+        setInterval(() => {
+            loadCampaigns();
+        }, 30000);
+    </script>
+</body>
+</html> 
