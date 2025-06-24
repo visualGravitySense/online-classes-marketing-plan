@@ -77,6 +77,15 @@ class ContentPreview(BaseModel):
     preview_id: str
 
 # API Endpoints
+@app.get("/api/status")
+async def get_status():
+    """Get API status"""
+    return {
+        "status": "running",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
 @app.get("/api/stats")
 async def get_stats():
     """Get posting statistics"""
