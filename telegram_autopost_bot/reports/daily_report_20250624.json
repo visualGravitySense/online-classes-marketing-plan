@@ -1,0 +1,18 @@
+{
+  "date": "2025-06-24",
+  "leads": {
+    "new_leads": "0",
+    "total_leads": "0",
+    "funnel_distribution": []
+  },
+  "posts": {
+    "new_posts": "150",
+    "sent_posts": "0",
+    "engagement": {
+      "total_views": 0,
+      "total_likes": 0,
+      "avg_views": 0
+    }
+  },
+  "conversions": 0
+}

@@ -20,43 +20,65 @@ class PostScheduler:
         self.bot = bot
         self.posting_schedule = posting_schedule
         self.running = False
-        self.task = None
+        self.scheduler_thread = None
+        self.loop = None
 
-    async def start(self):
-        """Start the scheduler in the main event loop."""
+    def start(self):
+        """Start the scheduler in a separate thread."""
         if self.running:
             return
         self.running = True
-        self.task = asyncio.create_task(self._run_scheduler())
-        logger.info("Scheduler started")
+        self.scheduler_thread = threading.Thread(target=self._run_scheduler_thread)
+        self.scheduler_thread.daemon = True
+        self.scheduler_thread.start()
+        logger.info("Scheduler started in separate thread")
 
-    async def stop(self):
+    def stop(self):
         """Stop the scheduler."""
         self.running = False
-        if self.task:
-            self.task.cancel()
-            try:
-                await self.task
-            except asyncio.CancelledError:
-                pass
+        if self.scheduler_thread:
+            self.scheduler_thread.join(timeout=5)
         logger.info("Scheduler stopped")
 
-    async def _run_scheduler(self):
-        """Main scheduler loop (async, runs in main event loop)."""
+    def _run_scheduler_thread(self):
+        """Run scheduler in a separate thread."""
+        # Create new event loop for this thread
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        
+        # Schedule the periodic task
+        schedule.every(1).minutes.do(self._check_and_publish_posts)
+        
         while self.running:
             try:
-                await self._process_pending_posts()
-                await asyncio.sleep(60)  # Check every minute
+                schedule.run_pending()
+                time.sleep(30)  # Check every 30 seconds
             except Exception as e:
-                logger.error(f"Error in scheduler: {str(e)}")
-                await asyncio.sleep(60)
+                logger.error(f"Error in scheduler thread: {str(e)}")
+                time.sleep(60)
+
+    def _check_and_publish_posts(self):
+        """Check for pending posts and publish them."""
+        try:
+            # Run the async function in the thread's event loop
+            self.loop.run_until_complete(self._process_pending_posts())
+        except Exception as e:
+            logger.error(f"Error checking posts: {str(e)}")
 
     async def _process_pending_posts(self):
         """Process all pending posts that are due for publishing."""
         try:
             pending_posts = self.db.get_pending_posts()
+            logger.info(f"Found {len(pending_posts)} pending posts")
+            
             for post in pending_posts:
-                await self._publish_post(post)
+                try:
+                    await self._publish_post(post)
+                    # Small delay between posts to avoid rate limiting
+                    await asyncio.sleep(2)
+                except Exception as e:
+                    logger.error(f"Error publishing post {post['id']}: {str(e)}")
+                    
         except Exception as e:
             logger.error(f"Error processing pending posts: {str(e)}")
 
@@ -65,6 +87,8 @@ class PostScheduler:
         try:
             channel_id = post['channel_id']
             content = post['content']
+            
+            logger.info(f"Publishing post {post['id']} to {channel_id}")
             
             # Handle media if present
             if post['media_path'] and post['media_type']:
@@ -88,7 +112,7 @@ class PostScheduler:
             
             # Mark post as published
             self.db.mark_post_published(post['id'])
-            logger.info(f"Successfully published post {post['id']}")
+            logger.info(f"Successfully published post {post['id']} to {channel_id}")
             
         except Exception as e:
             error_msg = f"Failed to publish post {post['id']}: {str(e)}"
@@ -105,7 +129,7 @@ class PostScheduler:
             
             # Schedule the post
             schedule.every().day.at(scheduled_time.strftime('%H:%M')).do(
-                lambda: self.loop.run_until_complete(self._process_pending_posts())
+                lambda: self._check_and_publish_posts()
             )
             
             logger.info(f"Scheduled post {post_id} for {scheduled_time}")
