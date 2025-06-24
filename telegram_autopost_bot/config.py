@@ -16,15 +16,33 @@ CHANNELS = {
         'name': 'Test Channel',
         'active': True
     },
+    'designer_lfe': {
+        'chat_id': '-1001903756368',
+        'name': 'designer_lfe',
+        'active': True,
+        'target_audience': 'Designers',
+        'description': 'Жизнь Дизайнера - сообщество для графических дизайнеров'
+    },
+    'digo_online_schools': {
+        'chat_id': '-1002316535443',
+        'name': 'digo_online_schools',
+        'active': True,
+        'target_audience': 'Developers',
+        'description': 'Product Design & ML - для разработчиков и IT-специалистов'
+    },
     'digoGraphickDesign': {
         'chat_id': '-1002091962525',
         'name': 'digoGraphickDesign',
-        'active': True
+        'active': True,
+        'target_audience': 'Freelancers',
+        'description': 'Сообщество фрилансеров и самоучек'
     },
     'digoUI': {
         'chat_id': '-1002123538949',
         'name': 'digoUI',
-        'active': True
+        'active': True,
+        'target_audience': 'Juniors',
+        'description': 'UX/UI для новичков и джуниоров'
     }
 }
 DATABASE_URL = os.getenv('DATABASE_URL', 'data/posts.db')
