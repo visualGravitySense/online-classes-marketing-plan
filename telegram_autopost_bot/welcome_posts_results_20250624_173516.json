@@ -1,0 +1,26 @@
+{
+  "digitalizacija_main": {
+    "status": "error",
+    "message": "A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: chat not found"
+  },
+  "biznes_automation": {
+    "status": "success",
+    "message_id": 4
+  },
+  "startup_digital": {
+    "status": "success",
+    "message_id": 4
+  },
+  "digitalizacija_community": {
+    "status": "success",
+    "message_id": 32
+  },
+  "biznes_consulting": {
+    "status": "success",
+    "message_id": 288
+  },
+  "automation_tips": {
+    "status": "success",
+    "message_id": 17
+  }
+}

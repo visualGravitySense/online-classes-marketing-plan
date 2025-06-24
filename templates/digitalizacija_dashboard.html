@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Дашборд "Digitalizacija Biznesa"</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4ECDC4;
+            --secondary-color: #45B7D1;
+            --success-color: #96CEB4;
+            --warning-color: #FFEAA7;
+            --danger-color: #FF6B6B;
+            --dark-color: #2C3E50;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .metric-label {
+            font-size: 1.1rem;
+            color: var(--dark-color);
+            margin-bottom: 10px;
+        }
+        
+        .metric-change {
+            font-size: 0.9rem;
+            color: var(--success-color);
+        }
+        
+        .metric-change.negative {
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: var(--success-color);
+        }
+        
+        .status-pending {
+            background-color: var(--warning-color);
+        }
+        
+        .status-inactive {
+            background-color: var(--danger-color);
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--dark-color);
+            border-radius: 10px;
+            margin-right: 5px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .refresh-btn {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Заголовок -->
+        <div class="header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-chart-line"></i> Дашборд "Digitalizacija Biznesa"</h1>
+                    <p class="text-muted mb-0">Аналитика кампании по цифровизации бизнеса</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="refresh-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
+                    <p class="text-muted mt-2 mb-0">
+                        <i class="fas fa-clock"></i> 
+                        <span id="last-update">{{ last_update }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основные метрики -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">
+                        <i class="fas fa-users"></i> Всего лидов
+                    </div>
+                    <div class="metric-value" id="total-leads">{{ total_leads }}</div>
+                    <div class="metric-change" id="leads-change">
+                        <i class="fas fa-arrow-up"></i> +{{ leads_growth }}% за неделю
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">
+                        <i class="fas fa-chart-pie"></i> Конверсия
+                    </div>
+                    <div class="metric-value" id="conversion-rate">{{ conversion_rate }}%</div>
+                    <div class="metric-change" id="conversion-change">
+                        <i class="fas fa-arrow-up"></i> +{{ conversion_growth }}% за неделю
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">
+                        <i class="fas fa-eye"></i> Просмотры
+                    </div>
+                    <div class="metric-value" id="total-views">{{ total_views }}</div>
+                    <div class="metric-change" id="views-change">
+                        <i class="fas fa-arrow-up"></i> +{{ views_growth }}% за неделю
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">
+                        <i class="fas fa-dollar-sign"></i> Доход
+                    </div>
+                    <div class="metric-value" id="total-revenue">${{ total_revenue }}</div>
+                    <div class="metric-change" id="revenue-change">
+                        <i class="fas fa-arrow-up"></i> +{{ revenue_growth }}% за неделю
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Графики и таблицы -->
+        <div class="row">
+            <!-- Воронка продаж -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4><i class="fas fa-funnel"></i> Воронка продаж</h4>
+                    <canvas id="funnelChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Конверсии по дням -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4><i class="fas fa-chart-line"></i> Конверсии по дням</h4>
+                    <canvas id="conversionsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Детальная аналитика -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-container">
+                    <ul class="nav nav-tabs" id="analyticsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leads" type="button" role="tab">
+                                <i class="fas fa-users"></i> Лиды
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">
+                                <i class="fas fa-file-alt"></i> Посты
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="channels-tab" data-bs-toggle="tab" data-bs-target="#channels" type="button" role="tab">
+                                <i class="fas fa-broadcast-tower"></i> Каналы
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations" type="button" role="tab">
+                                <i class="fas fa-lightbulb"></i> Рекомендации
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="analyticsTabsContent">
+                        <!-- Лиды -->
+                        <div class="tab-pane fade show active" id="leads" role="tabpanel">
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h5>Статистика по стадиям</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Стадия</th>
+                                                    <th>Количество</th>
+                                                    <th>Процент</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="funnel-table">
+                                                {% for stage in funnel_data %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="status-indicator status-active"></span>
+                                                        {{ stage.stage_name }}
+                                                    </td>
+                                                    <td>{{ stage.count }}</td>
+                                                    <td>{{ stage.percentage }}%</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Источники лидов</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Источник</th>
+                                                    <th>Количество</th>
+                                                    <th>Конверсия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="sources-table">
+                                                {% for source in sources_data %}
+                                                <tr>
+                                                    <td>{{ source.source }}</td>
+                                                    <td>{{ source.count }}</td>
+                                                    <td>{{ source.conversion }}%</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Посты -->
+                        <div class="tab-pane fade" id="posts" role="tabpanel">
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h5>Типы постов</h5>
+                                    <canvas id="postTypesChart" width="300" height="200"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Вовлеченность</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Метрика</th>
+                                                    <th>Значение</th>
+                                                    <th>Изменение</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Средние просмотры</td>
+                                                    <td>{{ avg_views }}</td>
+                                                    <td class="text-success">+{{ views_change }}%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Средние лайки</td>
+                                                    <td>{{ avg_likes }}</td>
+                                                    <td class="text-success">+{{ likes_change }}%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Средние комментарии</td>
+                                                    <td>{{ avg_comments }}</td>
+                                                    <td class="text-success">+{{ comments_change }}%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Каналы -->
+                        <div class="tab-pane fade" id="channels" role="tabpanel">
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <h5>Производительность каналов</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Канал</th>
+                                                    <th>Подписчики</th>
+                                                    <th>Посты</th>
+                                                    <th>Просмотры</th>
+                                                    <th>Вовлеченность</th>
+                                                    <th>Статус</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="channels-table">
+                                                {% for channel in channels_data %}
+                                                <tr>
+                                                    <td>{{ channel.name }}</td>
+                                                    <td>{{ channel.subscribers }}</td>
+                                                    <td>{{ channel.posts }}</td>
+                                                    <td>{{ channel.views }}</td>
+                                                    <td>{{ channel.engagement }}%</td>
+                                                    <td>
+                                                        <span class="status-indicator status-active"></span>
+                                                        Активен
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Рекомендации -->
+                        <div class="tab-pane fade" id="recommendations" role="tabpanel">
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <h5>Рекомендации по улучшению</h5>
+                                    <div id="recommendations-list">
+                                        {% for recommendation in recommendations %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-lightbulb"></i>
+                                            {{ recommendation }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Данные для графиков
+        const funnelData = {
+            labels: ['Осведомленность', 'Интерес', 'Рассмотрение', 'Намерение', 'Покупка'],
+            datasets: [{
+                label: 'Количество лидов',
+                data: [{{ funnel_chart_data }}],
+                backgroundColor: [
+                    '#FF6B6B',
+                    '#4ECDC4', 
+                    '#45B7D1',
+                    '#96CEB4',
+                    '#FFEAA7'
+                ],
+                borderWidth: 2
+            }]
+        };
+
+        const conversionsData = {
+            labels: [{{ conversions_chart_labels }}],
+            datasets: [{
+                label: 'Конверсии',
+                data: [{{ conversions_chart_data }}],
+                borderColor: '#4ECDC4',
+                backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        };
+
+        const postTypesData = {
+            labels: [{{ post_types_labels }}],
+            datasets: [{
+                label: 'Количество постов',
+                data: [{{ post_types_data }}],
+                backgroundColor: [
+                    '#FF6B6B',
+                    '#4ECDC4',
+                    '#45B7D1', 
+                    '#96CEB4'
+                ]
+            }]
+        };
+
+        // Создание графиков
+        const funnelChart = new Chart(document.getElementById('funnelChart'), {
+            type: 'doughnut',
+            data: funnelData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        const conversionsChart = new Chart(document.getElementById('conversionsChart'), {
+            type: 'line',
+            data: conversionsData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const postTypesChart = new Chart(document.getElementById('postTypesChart'), {
+            type: 'pie',
+            data: postTypesData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Функция обновления данных
+        function refreshData() {
+            // Показываем индикатор загрузки
+            document.querySelector('.refresh-btn i').classList.add('fa-spin');
+            
+            // Имитация обновления данных
+            setTimeout(() => {
+                // Обновляем время последнего обновления
+                document.getElementById('last-update').textContent = new Date().toLocaleString('ru-RU');
+                
+                // Убираем индикатор загрузки
+                document.querySelector('.refresh-btn i').classList.remove('fa-spin');
+                
+                // Показываем уведомление
+                showNotification('Данные обновлены!', 'success');
+            }, 2000);
+        }
+
+        // Функция показа уведомлений
+        function showNotification(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Автоматически убираем через 3 секунды
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+
+        // Автообновление каждые 5 минут
+        setInterval(() => {
+            refreshData();
+        }, 5 * 60 * 1000);
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Дашборд загружен');
+        });
+    </script>
+</body>
+</html> 
